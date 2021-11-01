@@ -4,7 +4,14 @@ import os
 from os import listdir
 from collections import deque
 from glob import glob
+
 # "I wanted to add something" - Dinesh
+
+
+class Pwd:
+    def exec(self, args, out):
+        out.append(os.getcwd())
+
 
 def eval(cmdline, out):
     raw_commands = []
@@ -26,7 +33,8 @@ def eval(cmdline, out):
         app = tokens[0]
         args = tokens[1:]
         if app == "pwd":
-            out.append(os.getcwd())
+            application = Pwd()
+
         elif app == "cd":
             if len(args) == 0 or len(args) > 1:
                 raise ValueError("wrong number of command line arguments")
@@ -96,6 +104,10 @@ def eval(cmdline, out):
                                 out.append(line)
         else:
             raise ValueError(f"unsupported application {app}")
+
+        application.exec(
+            args, out
+        )  # this wont work until every command has been refactored.
 
 
 if __name__ == "__main__":
