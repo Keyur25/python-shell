@@ -12,6 +12,17 @@ class Pwd:
     def exec(self, args, out):
         out.append(os.getcwd())
 
+class Ls:
+    def exec(self, args, out):
+        if len(args) == 0:
+            ls_dir = os.getcwd()
+        elif len(args) > 1:
+            raise ValueError("wrong number of command line arguments")
+        else:
+            ls_dir = args[0]
+        for f in listdir(ls_dir):
+            if not f.startswith("."):
+                out.append(f + "\n")
 
 def eval(cmdline, out):
     raw_commands = []
@@ -34,7 +45,6 @@ def eval(cmdline, out):
         args = tokens[1:]
         if app == "pwd":
             application = Pwd()
-
         elif app == "cd":
             if len(args) == 0 or len(args) > 1:
                 raise ValueError("wrong number of command line arguments")
@@ -42,15 +52,7 @@ def eval(cmdline, out):
         elif app == "echo":
             out.append(" ".join(args) + "\n")
         elif app == "ls":
-            if len(args) == 0:
-                ls_dir = os.getcwd()
-            elif len(args) > 1:
-                raise ValueError("wrong number of command line arguments")
-            else:
-                ls_dir = args[0]
-            for f in listdir(ls_dir):
-                if not f.startswith("."):
-                    out.append(f + "\n")
+            application = Ls()
         elif app == "cat":
             for a in args:
                 with open(a) as f:
