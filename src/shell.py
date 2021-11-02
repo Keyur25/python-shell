@@ -40,6 +40,11 @@ class Head:
             for i in range(0, min(len(lines), num_lines)):
                 out.append(lines[i])
 
+class Cat:
+    def exec(self, args, out):
+        for a in args:
+            with open(a) as f:
+                out.append(f.read())
 
 def eval(cmdline, out):
     raw_commands = []
@@ -71,9 +76,7 @@ def eval(cmdline, out):
         elif app == "ls":
             application = Ls()
         elif app == "cat":
-            for a in args:
-                with open(a) as f:
-                    out.append(f.read())
+            application = Cat()
         elif app == "head":
             application = Head()
         elif app == "tail":
