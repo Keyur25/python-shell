@@ -12,6 +12,9 @@ class Pwd:
 
 
 class Cd:
+    
+    """Change current working directory to args[0]"""
+    
     def exec(self, args, out):
         if len(args) == 0 or len(args) > 1:
             raise ValueError("wrong number of command line arguments")
@@ -19,11 +22,17 @@ class Cd:
 
 
 class Echo:
+    
+    """Prints the argument passed into echo"""
+    
     def exec(self, args, out):
         out.append(" ".join(args) + "\n")
 
 
 class Ls:
+    
+    """List the files in current directory"""
+    
     def exec(self, args, out):
         if len(args) == 0:
             ls_dir = os.getcwd()
@@ -37,6 +46,9 @@ class Ls:
 
 
 class Cat:
+    
+    """Print the contents of a file specified by args line by line"""
+    
     def exec(self, args, out):
         for a in args:
             with open(a) as f:
@@ -141,8 +153,8 @@ def eval(cmdline, out):
 
 
 if __name__ == "__main__":
-    args_num = len(sys.argv) - 1
-    if args_num > 0:
+    args_num = len(sys.argv) - 1 # number of args excluding script name
+    if args_num > 0: # checks for correct args for non interactive mode
         if args_num != 2:
             raise ValueError("wrong number of command line arguments")
         if sys.argv[1] != "-c":
