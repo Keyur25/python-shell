@@ -12,9 +12,9 @@ class Pwd:
 
 
 class Cd:
-    
+
     """Change current working directory to args[0]"""
-    
+
     def exec(self, args, out):
         if len(args) == 0 or len(args) > 1:
             raise ValueError("wrong number of command line arguments")
@@ -22,17 +22,17 @@ class Cd:
 
 
 class Echo:
-    
+
     """Prints the argument passed into echo"""
-    
+
     def exec(self, args, out):
         out.append(" ".join(args) + "\n")
 
 
 class Ls:
-    
+
     """List the files in current directory"""
-    
+
     def exec(self, args, out):
         if len(args) == 0:
             ls_dir = os.getcwd()
@@ -46,9 +46,9 @@ class Ls:
 
 
 class Cat:
-    
+
     """Print the contents of a file specified by args line by line"""
-    
+
     def exec(self, args, out):
         for a in args:
             with open(a) as f:
@@ -75,23 +75,35 @@ class Head:
 
 
 class Tail:
+
+    """
+    By default writes the last 10 lines of a file to standard output,
+    or an inputted number of lines with flag -n.
+    """
+
+    def _read_file(self, file, size_of_tail):
+        with open(file) as f:
+            lines = f.readlines()
+            no_of_lines = len(lines)
+            display_length = min(no_of_lines, size_of_tail)
+            for i in range(0, display_length):
+                out.append(lines[no_of_lines - display_length + i])
+
     def exec(self, args, out):
-        if len(args) != 1 and len(args) != 3:
+        no_of_args = len(args)
+        if no_of_args != 1 and no_of_args != 3:
             raise ValueError("wrong number of command line arguments")
-        if len(args) == 1:
-            num_lines = 10
+        if no_of_args == 1:
+            size_of_tail = 10
             file = args[0]
-        if len(args) == 3:
+        if no_of_args == 3:
             if args[0] != "-n":
                 raise ValueError("wrong flags")
             else:
-                num_lines = int(args[1])
+                size_of_tail = int(args[1])
                 file = args[2]
-        with open(file) as f:
-            lines = f.readlines()
-            display_length = min(len(lines), num_lines)
-            for i in range(0, display_length):
-                out.append(lines[len(lines) - display_length + i])
+
+        _read_file(out, file, size_of_tail)
 
 
 class Grep:
@@ -153,8 +165,8 @@ def eval(cmdline, out):
 
 
 if __name__ == "__main__":
-    args_num = len(sys.argv) - 1 # number of args excluding script name
-    if args_num > 0: # checks for correct args for non interactive mode
+    args_num = len(sys.argv) - 1  # number of args excluding script name
+    if args_num > 0:  # checks for correct args for non interactive mode
         if args_num != 2:
             raise ValueError("wrong number of command line arguments")
         if sys.argv[1] != "-c":
