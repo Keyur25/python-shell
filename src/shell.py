@@ -56,22 +56,32 @@ class Cat:
 
 
 class Head:
-    def exec(self, args, out):
-        if len(args) != 1 and len(args) != 3:
-            raise ValueError("wrong number of command line arguments")
-        if len(args) == 1:
-            num_lines = 10
-            file = args[0]
-        if len(args) == 3:
-            if args[0] != "-n":
-                raise ValueError("wrong flags")
-            else:
-                num_lines = int(args[1])
-                file = args[2]
+
+    """
+    By default writes the last 10 lines of a file to standard output,
+    or an inputted number of lines with flag -n.
+    """
+
+    def _read_file(self, file, size_of_head):
         with open(file) as f:
             lines = f.readlines()
-            for i in range(0, min(len(lines), num_lines)):
+            for i in range(0, min(len(lines), size_of_head)):
                 out.append(lines[i])
+
+    def exec(self, args, out):
+        no_of_args = len(args)
+        if no_of_args != 1 and no_of_args != 3:
+            raise ValueError("wrong number of command line arguments")
+        elif no_of_args == 1:  # default case
+            size_of_head = 10
+            file = args[0]
+        elif no_of_args == 3:  # when using -n [number] flag
+            if args[0] != "-n":
+                raise ValueError("wrong flags")
+            size_of_head = int(args[1])
+            file = args[2]
+
+        self._read_file(file, size_of_head)
 
 
 class Tail:
@@ -103,7 +113,7 @@ class Tail:
                 size_of_tail = int(args[1])
                 file = args[2]
 
-        _read_file(out, file, size_of_tail)
+        self._read_file(out, file, size_of_tail)
 
 
 class Grep:
