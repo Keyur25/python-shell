@@ -1,14 +1,17 @@
 import re
 import sys
 import os
-from os import listdir
+from os import listdir, path
 from collections import deque
 from glob import glob
 
 
 class Pwd:
+
+    """Prints current working directory"""
+
     def exec(self, args, out):
-        out.append(os.getcwd())
+        out.append(f"\033[93m\033[1m{os.getcwd()}\033[0m\n" + "\n")
 
 
 class Cd:
@@ -42,7 +45,12 @@ class Ls:
             ls_dir = args[0]
         for f in listdir(ls_dir):
             if not f.startswith("."):
-                out.append(f + "\n")
+                if path.isdir(
+                    f
+                ):  # If f is a directory/folder colour it and then print it out
+                    out.append(f"\033[93m\033[1m{f}\033[0m\n")
+                else:  # f is a file
+                    out.append(f + "\n")
 
 
 class Cat:
@@ -91,7 +99,7 @@ class Tail:
     or an inputted number of lines with flag -n.
     """
 
-    def _read_file(self, file, size_of_tail):
+    def _read_file(self, out, file, size_of_tail):
         with open(file) as f:
             lines = f.readlines()
             no_of_lines = len(lines)
@@ -115,7 +123,19 @@ class Tail:
 
         self._read_file(out, file, size_of_tail)
 
+        
+class Clear:
+    def exec(self, args, out):
+        # Windows users -> cls
+        # Mac/Linux users -> clear
+        os.system("cls||clear")
 
+
+class Exit:
+    def exec(self, args, out):
+        sys.exit(0)
+
+        
 class Grep:
     def exec(self, args, out):
         if len(args) < 2:
@@ -168,6 +188,10 @@ def eval(cmdline, out):
             application = Tail()
         elif app == "grep":
             application = Grep()
+        elif app == "clear":
+            application = Clear()
+        elif app == "exit":
+            application = Exit()
         else:
             raise ValueError(f"unsupported application {app}")
 
@@ -180,6 +204,7 @@ if __name__ == "__main__":
         if args_num != 2:
             raise ValueError("wrong number of command line arguments")
         if sys.argv[1] != "-c":
+            # -c = runs the file in interactive mode
             raise ValueError(f"unexpected command line argument {sys.argv[1]}")
         out = deque()
         eval(sys.argv[2], out)
