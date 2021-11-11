@@ -123,7 +123,7 @@ class Tail:
 
         self._read_file(out, file, size_of_tail)
 
-        
+
 class Clear:
     def exec(self, args, out):
         # Windows users -> cls
@@ -135,7 +135,63 @@ class Exit:
     def exec(self, args, out):
         sys.exit(0)
 
-        
+
+class Uniq:
+    """
+    Detects and deletes adjacent duplicate lines from an input file/stdin
+    and prints the result to stdout.
+    USAGE:
+        uniq [OPTIONS] [FILE]
+    ARGS:
+        [OPTIONS]
+            -i = flag ignores case (case insensitive)
+        [FILE] = file name, if not specified use stdin
+    """
+
+    def _uniq_lines(self, lines, case):
+        """
+        Return array of unique adjacent lines whilst maintaining insertion order.
+        """
+        if case:
+            # Casefold = returns string where all characters are lowercase
+            # Dictionary ensures order is maintained.
+            return set({line.casefold(): line for line in lines}.values())
+        uniq_lines = []
+        i = 0
+        while i < len(lines):
+            if (i + 1) < len(lines) and lines[i] == lines[i + 1]:  # Check if two adjacent lines are equal
+                uniq_lines.append(lines[i])  # If so, only add it once
+                i += 2
+            else:
+                uniq_lines.append(lines[i])  # If not equal then just add current line
+                i += 1
+        return uniq_lines
+
+    def _read_file(self, out, file_name, case):
+        with open(file_name) as f:
+            lines = f.readlines()
+            uniq_lines = self._uniq_lines(lines, case)
+            for line in uniq_lines:
+                out.append(line)
+
+    def exec(self, args, out):
+        num_of_args = len(args)
+        if num_of_args != 1 and num_of_args != 2:
+            raise ValueError("Wrong number of command line arguments")
+        if num_of_args == 1:
+            file_name = args[0]
+            case = False
+        if num_of_args == 2:
+            if args[0] != "<" and args[0] != "-i":    # This takes input from stdin, may be cause problems in future
+                raise ValueError("Wrong flags")
+            if args[0] == "-i":
+                case = True
+            if args[0] == "<":
+                case = False
+            file_name = args[1]
+        self._read_file(out, file_name, case)
+
+
 class Grep:
     def exec(self, args, out):
         if len(args) < 2:
@@ -192,6 +248,8 @@ def eval(cmdline, out):
             application = Clear()
         elif app == "exit":
             application = Exit()
+        elif app == "uniq":
+            application = Uniq()
         else:
             raise ValueError(f"unsupported application {app}")
 
