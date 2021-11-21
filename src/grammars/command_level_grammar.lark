@@ -1,0 +1,17 @@
+command: pipe | seq | call
+seq: command ";" command
+call: (NON_KEYWORD | quoted)*
+pipe: (call "|" call) | (pipe "|" call)
+
+quoted: single_quoted | double_quoted | backquoted
+single_quoted: (("'" NON_NEWLINE_AND_NON_SINGLE_QUOTE "'") | ("''"))
+double_quoted: "\"" (backquoted | DOUBLE_QUOTE_CONTENT)* "\""
+backquoted: (("`" NON_NEWLINE_AND_NON_BACKQUOTE "`") | ("``"))
+
+
+NON_NEWLINE_AND_NON_SINGLE_QUOTE: /[^'\n]+/
+NON_NEWLINE_AND_NON_BACKQUOTE: /[^`\n]+/
+DOUBLE_QUOTE_CONTENT: /[^\n\"`]+/
+NON_KEYWORD: /[^\n'\"`;|]+/
+
+%import common.WS
