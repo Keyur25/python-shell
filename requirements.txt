@@ -2,4 +2,4 @@ nose
 coverage
 flake8-html
 junit2html
-lark
+lark==0.11.3

@@ -22,7 +22,7 @@ class Parser:
         return grammar
 
     def _get_call_command_grammar(self):
-        file = open(str(Path(__file__).parent.absolute()) + "/grammars/command_level_grammar.lark", "r")
+        file = open(str(Path(__file__).parent.absolute()) + "/grammars/call_level_grammar.lark", "r")
         grammar = file.read()
         file.close()
         return grammar
