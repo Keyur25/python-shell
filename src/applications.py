@@ -2,6 +2,7 @@ import os
 import re
 import sys
 from os import listdir, path
+import glob
 
 class Pwd:
 
@@ -45,9 +46,9 @@ class Ls:
                 if path.isdir(
                     f
                 ):  # If f is a directory/folder colour it and then print it out
-                    out.append(f)
+                    out.append(f + "\n")
                 else:  # f is a file
-                    out.append(f)
+                    out.append(f + "\n")
 
 
 class Cat:
@@ -220,32 +221,39 @@ class Grep:
                             else:
                                 out.append(line)
 
-
 class Find:
-    def exec(self, args, out):
+
+    """
+    Finds all files with the given pattern in the given directory
+    as command line arguments. If no directory is given, we use the 
+    current directory.
+    """
+
+    def exec(self, args, out, in_pipe):
         num_of_args = len(args)
-        # print(args)
         if num_of_args == 2:
             if args[0] != "-name":
-                raise ValueError("first arguement must be '-name'")
+                out.append("first argument must be '-name'")
+                return
             else:
                 path = "./"
                 pattern = args[1]
         elif num_of_args == 3:
-            if args[0] != "-name":
-                raise ValueError("second arguement must be '-name'")
+            if args[1] != "-name":
+                out.append("second arguement must be '-name'")
+                return
             else:
                 path = args[0]
                 pattern = args[2]
         else:
-            raise ValueError("incorrect command line arguements")
-
-        import glob
+            out.append("incorrect command line arguements")
+            return
 
         file_names = glob.iglob(path + "/**/" + pattern, recursive=True)
 
         for file_name in file_names:
-            out.append(file_name)
+            out.append(file_name + "\n")
+            
 
 
 APPLICATIONS = {
