@@ -27,7 +27,7 @@ class Echo:
     """Prints the argument passed into echo"""
 
     def exec(self, args, out, in_pipe):
-        out.append(" ".join(args))
+        out.append(" ".join(args) + "\n")
 
 
 class Ls:
