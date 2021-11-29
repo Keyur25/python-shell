@@ -1,9 +1,11 @@
+from glob import glob
 from lark.visitors import Visitor_Recursive
 from commands import Call, Pipe
 from parser import Parser
 from lark import Tree, Token
 from applications import execute_application
 from command_evaluator import extract_raw_commands
+
 
 
 class CommandSubstituitionVisitor(Visitor_Recursive):
@@ -65,17 +67,29 @@ class CallTreeVisitor(Visitor_Recursive):
         else:
             self.args.append(redirection_visitor.file_name)
 
+    def _globbing(self, arg, unquoted_asterisk):
+        if unquoted_asterisk:
+            globbing = glob(arg)
+            if globbing:
+                self.args.append(" ".join(globbing))
+                return
+        self.args.append(arg)
+        
+        
     def _argument(self, tree):
+        unquoted_asterisk = False
         arg = ""
         for child in tree.children:
             if type(child) is Token:
                 arg += str(child)
+                unquoted_asterisk = "*" in str(child)    
             if type(child) is Tree:
                 if child.data == "quoted":
                     quoted_visitor = QuotedVisitor()
                     quoted_visitor.visit_topdown(tree)
                     arg += quoted_visitor.extracted_quotes
-        self.args.append(arg)
+        self._globbing(arg, unquoted_asterisk)
+                
 
     def atom(self, tree):
         for child in tree.children:

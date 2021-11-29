@@ -3,7 +3,6 @@ import re
 import sys
 from os import listdir, path
 
-
 class Pwd:
 
     """Prints current working directory"""
