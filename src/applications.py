@@ -4,6 +4,7 @@ import sys
 from os import listdir, path
 import glob
 
+
 class Pwd:
 
     """Prints current working directory"""
@@ -221,11 +222,12 @@ class Grep:
                             else:
                                 out.append(line)
 
+
 class Find:
 
     """
     Finds all files with the given pattern in the given directory
-    as command line arguments. If no directory is given, we use the 
+    as command line arguments. If no directory is given, we use the
     current directory.
     """
 
@@ -253,7 +255,59 @@ class Find:
 
         for file_name in file_names:
             out.append(file_name + "\n")
-            
+
+
+class Cut:
+    """
+    Cuts out sections from each line of given file or stdin
+    and prints result to stdout.
+    USAGE:
+        cut [OPTIONS] [FILE]
+    ARGS:
+        [OPTIONS]
+            -b = specifies bytes to extract from EACH line
+        [FILE] = file name, if not specified use stdin
+    """
+    
+    def _get_section(self, no_of_bytes_param, line) -> str:
+        """
+        Returns the extracted section from given line.
+        """
+        result = ""
+        for param in no_of_bytes_param:
+            if len(param) == 1 and int(param) <= len(line): # Single byte arg. e.g. -b n
+                result += (line[int(param)])
+            elif len(param) == 2:
+                # -b -n (from first byte to nth byte) or -b n- (from nth byte to last byte) 
+                if param[0] == '-': # Case -b -n
+                    result += (line[:int(param[1])])
+                elif param[1] == '-': # Case -b n-
+                    result += (str(line[int(param[0])-1:]))
+                    break
+            elif len(param) == 3:
+                # -b n-m (from nth byte to mth byte)
+                result += (line[int(param[0])-1:int(param[2])])
+        return result
+    
+
+    def exec(self, args, out, in_pipe):
+        try:
+            no_of_bytes_param = args[1].split(",")
+            no_of_bytes_param.sort()
+            file_name = args[2]
+        except:
+            out.append("Wrong number of arguments")
+            return
+        
+        with open(file_name) as file:
+            line = file.readline().strip()
+            result = ""
+            while line:
+                result += self._get_section(no_of_bytes_param, line)
+                line = file.readline().strip()
+                result += "\n"
+            out.append(result[:-1])
+
 
 
 APPLICATIONS = {
@@ -269,6 +323,7 @@ APPLICATIONS = {
     "exit": Exit(),
     "uniq": Uniq(),
     "find": Find(),
+    "cut": Cut(),
 }
 
 
