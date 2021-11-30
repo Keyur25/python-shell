@@ -257,6 +257,71 @@ class Find:
             out.append(file_name + "\n")
 
 
+
+"""
+Sorts the contents of a file/stdin line by line and prints the result to stdout.
+
+sort [OPTIONS] [FILE]
+
+- `OPTIONS`:
+    - `-r` sorts lines in reverse order
+- `FILE` is the name of the file. If not specified, uses stdin.
+"""
+
+
+class Sort:
+    def _sort_contents(self, contents, out, reverse=False):
+        if contents:
+            contents.sort(reverse=reverse)
+            # contents.remove("\n") # validate so only try to remove if new line is actually in the list
+            out.append("".join(contents))
+
+    def _read_file(self, file_name, out):
+        try:
+            with open(file_name) as f:
+                return f.readlines()
+        except FileNotFoundError:
+            out.append(f"File Not Found: {file_name}")
+            return None
+
+    def _input_from_stdin(self, out):
+        try:
+            result = out.pop()
+            if type(result) is list:
+                return result
+            elif type(result) is str:
+                return result.splitlines(keepends=True)
+            else:
+                raise TypeError()
+        except IndexError:
+            out.append("No Input Specified - find")
+            return None
+        except TypeError:
+            out.append("Unknown Stdin Input - find")
+            return None
+
+    def exec(self, args, out, in_pipe):
+        num_of_args = len(args)
+        if num_of_args == 0:
+            contents_of_input = self._input_from_stdin(out)
+            self._sort_contents(contents_of_input, out)
+        elif args[0] == "-r":
+            if num_of_args == 1:
+                contents_of_input = self._input_from_stdin(out)
+                self._sort_contents(contents_of_input, out, True)
+            elif num_of_args == 2:
+                file_name = args[1]
+                contents_of_input = self._read_file(file_name, out)
+                self._sort_contents(contents_of_input, out, True)
+            else:
+                out.append("Invalid Arguments - find")
+        elif num_of_args == 1:
+            file_name = args[0]
+            contents_of_input = self._read_file(file_name, out)
+            self._sort_contents(contents_of_input, out)
+        else:
+            out.append("Invalid Arguments - find")
+
 class Cut:
     """
     Cuts out sections from each line of given file or stdin
@@ -309,7 +374,6 @@ class Cut:
             out.append(result[:-1])
 
 
-
 APPLICATIONS = {
     "pwd": Pwd(),
     "cd": Cd(),
@@ -323,6 +387,7 @@ APPLICATIONS = {
     "exit": Exit(),
     "uniq": Uniq(),
     "find": Find(),
+    "sort": Sort(),
     "cut": Cut(),
 }
 
