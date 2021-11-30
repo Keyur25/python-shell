@@ -257,19 +257,16 @@ class Find:
             out.append(file_name + "\n")
 
 
-
-"""
-Sorts the contents of a file/stdin line by line and prints the result to stdout.
-
-sort [OPTIONS] [FILE]
-
-- `OPTIONS`:
-    - `-r` sorts lines in reverse order
-- `FILE` is the name of the file. If not specified, uses stdin.
-"""
-
-
 class Sort:
+    """
+    Sorts the contents of a file/stdin line by line and prints the result to stdout.
+
+    sort [OPTIONS] [FILE]
+
+    - `OPTIONS`:
+        - `-r` sorts lines in reverse order
+    - `FILE` is the name of the file. If not specified, uses stdin.
+    """
     def _sort_contents(self, contents, out, reverse=False):
         if contents:
             contents.sort(reverse=reverse)
