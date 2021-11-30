@@ -57,10 +57,11 @@ class Cat:
     """Print the contents of a file specified by args line by line"""
 
     def exec(self, args, out, in_pipe):
+        lines = []
         for a in args:
             with open(a) as f:
-                out.append(f.read())
-
+                lines.append(f.read())
+        out.append("".join(lines))
 
 class Head:
 
@@ -135,7 +136,6 @@ class Exit:
     def exec(self, args, out, in_pipe):
         sys.exit(0)
 
-
 class Uniq:
     """
     Detects and deletes adjacent duplicate lines from an input file/stdin
@@ -148,48 +148,47 @@ class Uniq:
         [FILE] = file name, if not specified use stdin
     """
 
-    def _uniq_lines(self, out, lines, case):
+    def _uniq_lines(self, out, lines, case_insensitive):
         """
         Print unique adjacent lines to stdout whilst maintaining insertion order.
         """
-        if case:
-            # Casefold = returns string where all characters are lowercase
-            # Dictionary ensures order is maintained.
-            uniq_lines = set({line.casefold(): line for line in lines}.values())
-            out.append("".join(uniq_lines))
-            return
+        #print(f"LINES TO TEST = {lines}, Case={case}")
         i = 0
         uniq_lines = []
         while i < len(lines):
-            if (i + 1) < len(lines) and lines[i] == lines[i + 1]:  # Check if two adjacent lines are equal
-                uniq_lines.append(lines[i])  # If so, only add it once
-                i += 2
+            if case_insensitive and len(uniq_lines) > 0 and lines[i].lower() == uniq_lines[-1].lower(): # Check if current and previous lines are equal (case-insensitive)
+                pass # If so, only add it once
+            elif len(uniq_lines) > 0 and lines[i] == uniq_lines[-1]:  # Check if current and previous lines are equal 
+                pass # If so, only add it once
             else:
                 uniq_lines.append(lines[i])  # If not equal then just add current line
-                i += 1
+            i += 1
         out.append("".join(uniq_lines))
         
-    def _read_file(self, out, file_name, case):
+    def _read_file(self, out, file_name, case_insensitive):
         with open(file_name) as file:
             lines = file.readlines()
         file.close()
-        self._uniq_lines(out, lines, case)
+        self._uniq_lines(out, lines, case_insensitive)
 
     def exec(self, args, out, in_pipe):
         num_of_args = len(args)
+        if in_pipe:
+            lines = out.pop().splitlines(keepends=True)
+            self._uniq_lines(out, lines, num_of_args == 1 and args[0] == '-i')
+            return
         if num_of_args != 1 and num_of_args != 2:
             out.append("Wrong number of command line arguments")
             return
-        if num_of_args == 1:
+        case_insensitive = num_of_args == 2
+        if not case_insensitive:
             file_name = args[0]
-            case = False
-        if num_of_args == 2:
+        else:
             if (args[0] != "-i"):  # Case insensitive flag.
                 out.append("Wrong flags")
                 return
-            case = True
             file_name = args[1]
-        self._read_file(out, file_name, case)
+        self._read_file(out, file_name, case_insensitive)
 
 class Grep:
     def exec(self, args, out, in_pipe):
