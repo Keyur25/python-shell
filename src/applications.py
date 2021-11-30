@@ -110,6 +110,7 @@ class Tail:
         no_of_args = len(args)
         if no_of_args != 1 and no_of_args != 3:
             raise ValueError("wrong number of command line arguments")
+            
         if no_of_args == 1:
             size_of_tail = 10
             file = args[0]
@@ -333,7 +334,10 @@ class Cut:
         result = ""
         for param in no_of_bytes_param:
             if len(param) == 1 and int(param) <= len(line): # Single byte arg. e.g. -b n
-                result += (line[int(param)])
+                if int(param) == 1:
+                    result += line[0]
+                else:
+                    result += (line[int(param)])
             elif len(param) == 2:
                 # -b -n (from first byte to nth byte) or -b n- (from nth byte to last byte) 
                 if param[0] == '-': # Case -b -n
