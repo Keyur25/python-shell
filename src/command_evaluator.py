@@ -1,34 +1,8 @@
 from lark import Tree
+from lark.lexer import Token
 from lark.visitors import Visitor_Recursive
 from commands import Call, Pipe
 
-
-class QuotedExtractor(Visitor_Recursive):
-    def __init__(self):
-        self.extracted_quotes = ""
-
-    # why can't all of these just do self.extracted_quotes += quote + tree.children[0] + quote
-
-    def double_quoted(self, tree):
-        if len(tree.children) > 0:
-            self.extracted_quotes += '"' + tree.children[0] + '"'
-        else:
-            self.extracted_quotes += '""'
-
-    def single_quoted(self, tree):
-        if len(tree.children) > 0:
-            self.extracted_quotes += "'" + tree.children[0] + "'"
-        else:
-            self.extracted_quotes += "''"
-
-    def backquoted(self, tree):
-        if len(tree.children) > 0:
-            self.extracted_quotes += "`" + tree.children[0] + "`"
-        else:
-            self.extracted_quotes += "``"
-
-
-# Visitor_Recursive is slightly faster than Visitor
 class CommandTreeVisitor(Visitor_Recursive):
     def __init__(self):
         self.raw_commands = []
@@ -37,16 +11,41 @@ class CommandTreeVisitor(Visitor_Recursive):
         lhs = self.raw_commands.pop(-2)
         rhs = self.raw_commands.pop(-1)
         self.raw_commands.append(Pipe(lhs, rhs))
+    
+    def _extract_quoted_content(self, node, quote: str):
+        if len(node.children) > 0:
+            return quote + node.children[0] + quote
+        else:
+            return  quote+quote
 
+    def _double_quoted(self, tree):
+        double_quoted_args = '"'
+        for child in tree.children:
+            if(type(child) is Token):
+                double_quoted_args+=str(child)
+            else: # backquoted
+                double_quoted_args += self._extract_quoted_content(child, "`")
+        return double_quoted_args + '"'
+
+
+    def _quoted(self, tree):
+        quoted_args = ""
+        for child in tree.children:
+            if(child.data == "double_quoted"):
+                quoted_args += self._double_quoted(child)
+            elif(child.data == "single_quoted"):
+                quoted_args += self._extract_quoted_content(child, "'")
+            elif(child.data == "backquoted"):
+                quoted_args += self._extract_quoted_content(child, "`")
+        return quoted_args
+                
     def call(self, tree):
         args = ""
-        for arg in tree.children:
-            if type(arg) == Tree:
-                quoted_extractor = QuotedExtractor()
-                quoted_extractor.visit(arg)
-                args += quoted_extractor.extracted_quotes
+        for child in tree.children:
+            if (type(child) == Tree) and child.data == "quoted":
+                args += self._quoted(child)
             else:
-                args += arg
+                args += str(child)
         self.raw_commands.append(Call((args).strip()))
 
 
