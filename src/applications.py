@@ -155,16 +155,18 @@ class Uniq:
             # Casefold = returns string where all characters are lowercase
             # Dictionary ensures order is maintained.
             uniq_lines = set({line.casefold(): line for line in lines}.values())
-            [out.append(line) for line in uniq_lines]
+            out.append("".join(uniq_lines))
             return
         i = 0
+        uniq_lines = []
         while i < len(lines):
             if (i + 1) < len(lines) and lines[i] == lines[i + 1]:  # Check if two adjacent lines are equal
-                out.append(lines[i])  # If so, only add it once
+                uniq_lines.append(lines[i])  # If so, only add it once
                 i += 2
             else:
-                out.append(lines[i])  # If not equal then just add current line
+                uniq_lines.append(lines[i])  # If not equal then just add current line
                 i += 1
+        out.append("".join(uniq_lines))
         
     def _read_file(self, out, file_name, case):
         with open(file_name) as file:
