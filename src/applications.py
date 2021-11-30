@@ -147,53 +147,46 @@ class Uniq:
         [FILE] = file name, if not specified use stdin
     """
 
-    def _uniq_lines(self, lines, case):
+    def _uniq_lines(self, out, lines, case):
         """
-        Return array of unique adjacent lines whilst maintaining insertion order.
+        Print unique adjacent lines to stdout whilst maintaining insertion order.
         """
         if case:
             # Casefold = returns string where all characters are lowercase
             # Dictionary ensures order is maintained.
-            return set({line.casefold(): line for line in lines}.values())
-        uniq_lines = []
+            uniq_lines = set({line.casefold(): line for line in lines}.values())
+            [out.append(line) for line in uniq_lines]
+            return
         i = 0
         while i < len(lines):
-            if (i + 1) < len(lines) and lines[i] == lines[
-                i + 1
-            ]:  # Check if two adjacent lines are equal
-                uniq_lines.append(lines[i])  # If so, only add it once
+            if (i + 1) < len(lines) and lines[i] == lines[i + 1]:  # Check if two adjacent lines are equal
+                out.append(lines[i])  # If so, only add it once
                 i += 2
             else:
-                uniq_lines.append(lines[i])  # If not equal then just add current line
+                out.append(lines[i])  # If not equal then just add current line
                 i += 1
-        return uniq_lines
-
+        
     def _read_file(self, out, file_name, case):
-        with open(file_name) as f:
-            lines = f.readlines()
-            uniq_lines = self._uniq_lines(lines, case)
-            for line in uniq_lines:
-                out.append(line)
+        with open(file_name) as file:
+            lines = file.readlines()
+        file.close()
+        self._uniq_lines(out, lines, case)
 
     def exec(self, args, out, in_pipe):
         num_of_args = len(args)
         if num_of_args != 1 and num_of_args != 2:
-            raise ValueError("Wrong number of command line arguments")
+            out.append("Wrong number of command line arguments")
+            return
         if num_of_args == 1:
             file_name = args[0]
             case = False
         if num_of_args == 2:
-            if (
-                args[0] != "<" and args[0] != "-i"
-            ):  # This takes input from stdin, may be cause problems in future
-                raise ValueError("Wrong flags")
-            if args[0] == "-i":
-                case = True
-            if args[0] == "<":
-                case = False
+            if (args[0] != "-i"):  # Case insensitive flag.
+                out.append("Wrong flags")
+                return
+            case = True
             file_name = args[1]
         self._read_file(out, file_name, case)
-
 
 class Grep:
     def exec(self, args, out, in_pipe):
