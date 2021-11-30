@@ -349,25 +349,34 @@ class Cut:
                 result += (line[int(param[0])-1:int(param[2])])
         return result
     
+    def _exec_cut(self, no_of_bytes_param, lines):
+        '''
+        Returns the result to print to stdout.
+        '''
+        result = ""
+        for line in lines:
+            result += self._get_section(no_of_bytes_param, line.strip()) + "\n"
+        return result[:-1]
 
     def exec(self, args, out, in_pipe):
         try:
             no_of_bytes_param = args[1].split(",")
             no_of_bytes_param.sort()
-            file_name = args[2]
-        except:
-            out.append("Wrong number of arguments")
-            return
-        
-        with open(file_name) as file:
-            line = file.readline().strip()
-            result = ""
-            while line:
-                result += self._get_section(no_of_bytes_param, line)
-                line = file.readline().strip()
-                result += "\n"
-            out.append(result[:-1])
 
+            if (in_pipe):
+                lines = out.pop().splitlines(keepends=False)
+                out.append(self._exec_cut(no_of_bytes_param, lines))
+                return
+
+            file_name = args[2]
+            with open(file_name) as file:
+                lines = file.readlines()
+                out.append(self._exec_cut(no_of_bytes_param, lines))
+            file.close()
+
+        except IndexError:
+            out.append("Incorrect arguments")
+            return
 
 APPLICATIONS = {
     "pwd": Pwd(),
