@@ -13,8 +13,14 @@ class CommandSubstituitionVisitor(Visitor_Recursive):
         self.out = out
 
     def backquoted(self, tree):
-        evaluate_command_substituition(tree.children[0], self.out)
-        tree.children[0] = self.out.pop().replace("\n", " ")
+        no_of_cmds = evaluate_command_substituition(tree.children[0], self.out)
+        res = []
+        # gets all the results of the subcommand from out
+        for _ in range(no_of_cmds):
+            res.append(self.out.pop().replace("\n", " ").strip())
+        res.reverse()
+        tree.children[0] = " ".join(res)
+
 
 
 class QuotedVisitor(Visitor_Recursive):
@@ -165,6 +171,7 @@ def evaluate_command_substituition(command, out):
         return
     raw_commands = extract_raw_commands(command_tree)
     evaluate_raw_commands(raw_commands, out)
+    return len(raw_commands)
 
 
 def evaluate_call(call: Call, out, in_pipe=False):
