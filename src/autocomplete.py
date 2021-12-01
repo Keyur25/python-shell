@@ -1,4 +1,4 @@
-""" OS Module used to autocomplete paths """
+""" OS Module used to get paths """
 from os import getcwd, listdir, path
 import readline
 APPLICATIONS = {
