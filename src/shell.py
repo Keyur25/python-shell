@@ -38,4 +38,4 @@ if __name__ == "__main__":
             out = deque()
             eval(cmdline, out)
             while len(out) > 0:
-                print(out.popleft())
+                print(out.popleft(), end="")

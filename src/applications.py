@@ -19,7 +19,8 @@ class Cd:
 
     def exec(self, args, out, in_pipe):
         if len(args) == 0 or len(args) > 1:
-            raise ValueError("wrong number of command line arguments")
+            out.append("wrong number of command line arguments")
+            return
         os.chdir(args[0])
 
 
@@ -39,17 +40,20 @@ class Ls:
         if len(args) == 0:
             ls_dir = os.getcwd()
         elif len(args) > 1:
-            raise ValueError("wrong number of command line arguments")
+            out.append("Wrong number of command line arguments")
+            return
         else:
             ls_dir = args[0]
+        contents = []
         for f in listdir(ls_dir):
             if not f.startswith("."):
                 if path.isdir(
                     f
                 ):  # If f is a directory/folder colour it and then print it out
-                    out.append(f + "\n")
+                    contents.append(f)
                 else:  # f is a file
-                    out.append(f + "\n")
+                    contents.append(f)
+        out.append("\n".join(contents))
 
 
 class Cat:
@@ -79,13 +83,15 @@ class Head:
     def exec(self, args, out, in_pipe):
         no_of_args = len(args)
         if no_of_args != 1 and no_of_args != 3:
-            raise ValueError("wrong number of command line arguments")
+            out.append("wrong number of command line arguments")
+            return
         elif no_of_args == 1:  # default case
             size_of_head = 10
             file = args[0]
         elif no_of_args == 3:  # when using -n [number] flag
             if args[0] != "-n":
-                raise ValueError("wrong flags")
+                out.append("wrong flags")
+                return
             size_of_head = int(args[1])
             file = args[2]
 
@@ -110,14 +116,14 @@ class Tail:
     def exec(self, args, out, in_pipe):
         no_of_args = len(args)
         if no_of_args != 1 and no_of_args != 3:
-            raise ValueError("wrong number of command line arguments")
-            
+            out.append("wrong number of command line arguments")
+            return
         if no_of_args == 1:
             size_of_tail = 10
             file = args[0]
         if no_of_args == 3:
             if args[0] != "-n":
-                raise ValueError("wrong flags")
+                out.append("wrong flags")
             else:
                 size_of_tail = int(args[1])
                 file = args[2]
@@ -193,29 +199,30 @@ class Uniq:
 class Grep:
     def exec(self, args, out, in_pipe):
         if len(args) < 1:
-            raise ValueError("wrong number of command line arguments")
+            out.append("wrong number of command line arguments")
+            return
         elif len(args) == 1 and in_pipe:
             pattern = args[0]
             lines = out.pop().split("\n")
-            # print("LINES: ", lines)
+            contents = []
             for line in lines:
-                # print("LINE: ", line)
                 if re.match(pattern, line):
-                    out.append(line + "\n")
+                    contents.append(line)
+            out.append("".join(contents))
         else:
             pattern = args[0]
             files = args[1:]
+            contents = []
             for file in files:
                 with open(file) as f:
                     lines = f.readlines()
                     for line in lines:
-                        # print(pattern, line)
-                        # print(re.match(pattern, line))
                         if re.match(pattern, line):
                             if len(files) > 1:
-                                out.append(f"{file}:{line}")
+                                contents.append(f"{file}:{line}")
                             else:
-                                out.append(line)
+                                contents.append(line)
+            out.append("".join(contents))
 
 
 class Find:
@@ -246,10 +253,9 @@ class Find:
             out.append("incorrect command line arguements")
             return
 
-        file_names = glob.iglob(path + "/**/" + pattern, recursive=True)
+        file_names = "\n".join(glob.iglob(path + "/**/" + pattern, recursive=True))
 
-        for file_name in file_names:
-            out.append(file_name + "\n")
+        out.append(file_names)
 
 
 class Sort:
@@ -286,10 +292,10 @@ class Sort:
             else:
                 raise TypeError()
         except IndexError:
-            out.append("No Input Specified - find")
+            out.append("No Input Specified - sort")
             return None
         except TypeError:
-            out.append("Unknown Stdin Input - find")
+            out.append("Unknown Stdin Input - sort")
             return None
 
     def exec(self, args, out, in_pipe):
@@ -306,13 +312,13 @@ class Sort:
                 contents_of_input = self._read_file(file_name, out)
                 self._sort_contents(contents_of_input, out, True)
             else:
-                out.append("Invalid Arguments - find")
+                out.append("Invalid Arguments - sort")
         elif num_of_args == 1:
             file_name = args[0]
             contents_of_input = self._read_file(file_name, out)
             self._sort_contents(contents_of_input, out)
         else:
-            out.append("Invalid Arguments - find")
+            out.append("Invalid Arguments - sort")
 
 class Cut:
     """
