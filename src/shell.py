@@ -7,7 +7,7 @@ from glob import glob
 from applications import *
 from command_evaluator import extract_raw_commands
 from call_evaluator import evaluate_raw_commands
-
+import autocomplete
 
 def eval(cmdline, out):
     parser = Parser()
@@ -33,8 +33,7 @@ if __name__ == "__main__":
             print(out.popleft(), end="")
     else:
         while True:
-            print(os.getcwd() + "> ", end="")
-            cmdline = input()
+            cmdline = input(os.getcwd() + "> ")
             out = deque()
             eval(cmdline, out)
             while len(out) > 0:
