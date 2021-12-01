@@ -59,7 +59,7 @@ class Cat:
     def exec(self, args, out, in_pipe):
         lines = []
         for a in args:
-            with open(a) as f:
+            with open(a.strip()) as f:
                 lines.append(f.read())
         out.append("".join(lines))
 
@@ -201,7 +201,7 @@ class Grep:
             for line in lines:
                 # print("LINE: ", line)
                 if re.match(pattern, line):
-                    out.append(line)
+                    out.append(line + "\n")
         else:
             pattern = args[0]
             files = args[1:]

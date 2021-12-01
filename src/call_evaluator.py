@@ -14,7 +14,7 @@ class CommandSubstituitionVisitor(Visitor_Recursive):
 
     def backquoted(self, tree):
         evaluate_command_substituition(tree.children[0], self.out)
-        tree.children[0] = self.out.pop() #doesnt work for seq. commands, only popping one
+        tree.children[0] = self.out.pop().replace("\n", " ")
 
 
 class QuotedVisitor(Visitor_Recursive):
