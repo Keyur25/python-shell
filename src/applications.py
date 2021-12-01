@@ -208,7 +208,7 @@ class Grep:
             for line in lines:
                 if re.match(pattern, line):
                     contents.append(line)
-            out.append("".join(contents))
+            out.append("\n".join(contents))
         else:
             pattern = args[0]
             files = args[1:]
@@ -217,12 +217,13 @@ class Grep:
                 with open(file) as f:
                     lines = f.readlines()
                     for line in lines:
+                        line = line.replace("\n", "")
                         if re.match(pattern, line):
                             if len(files) > 1:
                                 contents.append(f"{file}:{line}")
                             else:
                                 contents.append(line)
-            out.append("".join(contents))
+            out.append("\n".join(contents))
 
 
 class Find:
