@@ -48,7 +48,7 @@ class Call(Command):
             return
         else:
             self._eval_command_subsitution(out, call_tree)
-            self.visit_call_tree(call_tree)
+            self._visit_call_tree(call_tree)
             execute_application(self, out, in_pipe)
 
 class PipeIterator:
