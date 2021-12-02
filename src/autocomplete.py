@@ -70,6 +70,26 @@ class Completer():  # Custom completer
                 opts.append(file)
         self.set_options(opts)
 
+    def autocomplete_application(self, text, state):
+        self.options = APPLICATIONS.keys()
+        return self.completes(text, state)
+
+    def autocomplete_flag(self, current_text, text, state):
+        params = APPLICATIONS.get(current_text[-2])
+        self.options = [params]
+        return self.completes(text, state)[1:]
+
+    def autocomplete_files_and_folders(self, current_text, text, state):
+        ls_dir = getcwd()
+        if '/' in current_text[-1]:
+            self.autocomplete_subdir(current_text, ls_dir)
+        self.set_options_to_files_and_folders(ls_dir)
+        res = self.completes(text, state)
+        # If autocomplete text is path add a '/' to distinguish
+        if path.isdir(ls_dir + '/' + res + '/'):
+            return res + '/'
+        return res
+
     def check(self, text, state):
         """
         Main function to check what the type of the current text is
@@ -79,22 +99,11 @@ class Completer():  # Custom completer
         current = readline.get_line_buffer()
         current_text = current.split(" ")
         if len(current_text) == 1 or current_text[-2] in ['|', ';', '`']:
-            self.options = APPLICATIONS.keys()
-            return self.completes(text, state)
+            return self.autocomplete_application(text, state)
         elif current_text[-1] == '-':  # It is a flag argument
-            params = APPLICATIONS.get(current_text[-2])
-            self.options = [params]
-            return self.completes(text, state)[1:]
+            return self.autocomplete_flag(current_text, text, state)
         else:
-            ls_dir = getcwd()
-            if '/' in current_text[-1]:
-                self.autocomplete_subdir(current_text, ls_dir)
-            self.set_options_to_files_and_folders(ls_dir)
-            res = self.completes(text, state)
-            # If autocomplete text is path add a '/' to distinguish
-            if path.isdir(ls_dir + '/' + res + '/'):
-                return res + '/'
-            return res
+            return self.autocomplete_files_and_folders(current_text, text, state)
 
 # Initialise the options to applications domain at first run.
 completer = Completer(APPLICATIONS.keys())
