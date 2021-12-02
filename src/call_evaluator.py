@@ -1,26 +1,35 @@
 from glob import glob
 from lark.visitors import Visitor_Recursive
-from commands import Call, Pipe
-from parser import Parser
 from lark import Tree, Token
-from applications import execute_application
-from command_evaluator import extract_raw_commands
-
-
+from parser import Parser
 
 class CommandSubstituitionVisitor(Visitor_Recursive):
     def __init__(self, out):
         self.out = out
+    
+    def _eval_command_substituition(self, command, out):
+        from commands import Seq
+        from command_evaluator import extract_raw_commands
+        
+        parser = Parser()
+        command_tree = parser.command_level_parse(command)
+        if not command_tree:
+            out.append(f"Unrecognized Input: {command}")
+            return
+        raw_commands = extract_raw_commands(command_tree)
+        seq = Seq(raw_commands)
+        seq.eval(out)
+        return len(raw_commands)
 
     def backquoted(self, tree):
-        no_of_cmds = evaluate_command_substituition(tree.children[0], self.out)
+        pass
+        no_of_cmds = self._eval_command_substituition(tree.children[0], self.out)
         res = []
         # gets all the results of the subcommand from out
         for _ in range(no_of_cmds):
             res.append(self.out.pop().replace("\n", " ").strip())
         res.reverse()
         tree.children[0] = " ".join(res)
-
 
 
 class QuotedVisitor(Visitor_Recursive):
@@ -161,54 +170,3 @@ class CallTreeVisitor(Visitor_Recursive):
                     self.application = arg.strip()
             if child.data == "redirection":
                 self._redirection(child)
-
-
-def evaluate_command_substituition(command, out):
-    parser = Parser()
-    command_tree = parser.command_level_parse(command)
-    if not command_tree:
-        out.append(f"Unrecognized Input: {command}")
-        return
-    raw_commands = extract_raw_commands(command_tree)
-    evaluate_raw_commands(raw_commands, out)
-    return len(raw_commands)
-
-
-def evaluate_call(call: Call, out, in_pipe=False):
-    parser = Parser()
-    call_tree = parser.call_level_parse(call.raw_command)
-    if not call_tree:
-        if call.raw_command:
-            out.append(f"Unrecognized Command: {call.raw_command}")
-        return
-
-    command_substituition_visitor = CommandSubstituitionVisitor(out)
-    command_substituition_visitor.visit(call_tree)
-
-    call_tree_visitor = CallTreeVisitor()
-    call_tree_visitor.visit_topdown(call_tree)
-
-    call.application = call_tree_visitor.application
-    call.args = call_tree_visitor.args
-    call.file_output = call_tree_visitor.file_output
-
-    execute_application(call, out, in_pipe)
-
-
-def evaluate_pipe(pipe: Pipe, out):
-    first_call = True
-    for call in pipe:
-        if first_call:
-            evaluate_call(call, out)
-            first_call = False
-        else:
-            evaluate_call(call, out, True)
-
-
-def evaluate_raw_commands(raw_commands, out):
-    for raw_command in raw_commands:
-        command_type = type(raw_command)
-        if command_type is Call:
-            evaluate_call(raw_command, out)
-        elif command_type is Pipe:
-            evaluate_pipe(raw_command, out)

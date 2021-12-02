@@ -6,8 +6,8 @@ from collections import deque
 from glob import glob
 from applications import *
 from command_evaluator import extract_raw_commands
-from call_evaluator import evaluate_raw_commands
 import autocomplete
+from commands import Seq
 
 def eval(cmdline, out):
     parser = Parser()
@@ -16,8 +16,8 @@ def eval(cmdline, out):
         out.append(f"Unrecognized Input: {cmdline}")
         return
     raw_commands = extract_raw_commands(command_tree)
-    evaluate_raw_commands(raw_commands, out)
-
+    seq = Seq(raw_commands)
+    seq.eval(out)
 
 if __name__ == "__main__":
     args_num = len(sys.argv) - 1  # number of args excluding script name

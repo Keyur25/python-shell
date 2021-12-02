@@ -1,7 +1,8 @@
 from lark import Tree
 from lark.lexer import Token
 from lark.visitors import Visitor_Recursive
-from commands import Call, Pipe
+from commands import Call, Pipe, Seq
+from parser import Parser
 
 class CommandTreeVisitor(Visitor_Recursive):
     def __init__(self):
@@ -48,8 +49,18 @@ class CommandTreeVisitor(Visitor_Recursive):
                 args += str(child)
         self.raw_commands.append(Call((args).strip()))
 
-
 def extract_raw_commands(command_tree):
     command_tree_visitor = CommandTreeVisitor()
     command_tree_visitor.visit(command_tree)
     return command_tree_visitor.raw_commands
+
+def eval_command_substituition(command, out):
+    parser = Parser()
+    command_tree = parser.command_level_parse(command)
+    if not command_tree:
+        out.append(f"Unrecognized Input: {command}")
+        return
+    raw_commands = extract_raw_commands(command_tree)
+    seq = Seq(raw_commands)
+    seq.eval(out)
+    return len(raw_commands)
