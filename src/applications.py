@@ -1,232 +1,239 @@
 import os
 import re
 import sys
-from os import listdir, path
 import glob
+from os import listdir
+from application_interface import Application
 
 
-class Pwd:
+class ApplicationExcecutionError(Exception):
 
-    """Prints current working directory"""
+    """raised when an application cannot be executed"""
+
+    def __init__(self, message):
+        self.message = message
+        super().__init__(self.message)
+
+
+class Pwd(Application):
+
+    """outputs current working directory"""
 
     def exec(self, args, out, in_pipe):
-        out.append(os.getcwd())
+        if args:
+            raise ApplicationExcecutionError("Pwd Takes No Arguments")
+        out.append(os.getcwd() + "\n")
 
 
-class Cd:
+class Cd(Application):
 
-    """Change current working directory to args[0]"""
+    """change the current working directory to the first argument"""
 
     def exec(self, args, out, in_pipe):
-        if len(args) == 0 or len(args) > 1:
-            out.append("wrong number of command line arguments")
-            return
+        if len(args) != 1:
+            raise ApplicationExcecutionError("Invalid Arguments")
         os.chdir(args[0])
 
 
-class Echo:
+class Ls(Application):
 
-    """Prints the argument passed into echo"""
+    """lists the contents of a directory"""
 
-    def exec(self, args, out, in_pipe):
-        out.append(" ".join(args) + "\n")
-
-
-class Ls:
-
-    """List the files in current directory"""
-
-    def exec(self, args, out, in_pipe):
+    def _get_directory(self, args):
         if len(args) == 0:
-            ls_dir = os.getcwd()
-        elif len(args) > 1:
-            out.append("Wrong number of command line arguments")
-            return
+            return os.getcwd()
+        elif len(args) == 1:
+            return args[0]
         else:
-            ls_dir = args[0]
+            raise ApplicationExcecutionError("Invalid Arguments")
+
+    def exec(self, args, out, in_pipe):
+        ls_dir = self._get_directory(args)
         contents = []
         for f in listdir(ls_dir):
-            if not f.startswith("."):
-                if path.isdir(
-                    f
-                ):  # If f is a directory/folder colour it and then print it out
-                    contents.append(f)
-                else:  # f is a file
-                    contents.append(f)
-        out.append("\n".join(contents))
+            if not f.startswith("."):  # if f is hidden then we do not want to list it
+                contents.append(f)
+        out.append("\n".join(contents) + "\n")
 
 
-class Cat:
+class Cat(Application):
 
-    """Print the contents of a file specified by args line by line"""
+    """concatenates the content of given files"""
 
     def exec(self, args, out, in_pipe):
+        if not args:
+            if not in_pipe:
+                raise ApplicationExcecutionError("Invalid Arguments")
+            args = out.pop()  # get input from stdin
         lines = []
         for a in args:
             with open(a.strip()) as f:
                 lines.append(f.read())
         out.append("".join(lines))
 
-class Head:
 
-    """
-    By default writes the last 10 lines of a file to standard output,
-    or an inputted number of lines with flag -n.
-    """
+class Echo(Application):
 
-    def _read_file(self, file, size_of_head, out):
+    """prints its arguments separated by spaces"""
+
+    def exec(self, args, out, in_pipe):
+        out.append(" ".join(args) + "\n")
+
+
+class Head(Application):
+
+    """prints the first n (10 if n is not specified) lines of a given file or stdin"""
+
+    def _read_first_n_lines_from_file(self, file, n, out):
         with open(file) as f:
             lines = f.readlines()
-            for i in range(0, min(len(lines), size_of_head)):
-                out.append(lines[i])
+            content = []
+            for i in range(0, min(len(lines), n)):
+                content.append(lines[i])
+            out.append("".join(content))
 
     def exec(self, args, out, in_pipe):
         no_of_args = len(args)
-        if no_of_args != 1 and no_of_args != 3:
-            out.append("wrong number of command line arguments")
-            return
+        if no_of_args == 0 and in_pipe:  # get input from stdin
+            self._read_first_n_lines_from_file(out.pop(), 10, out)
         elif no_of_args == 1:  # default case
-            size_of_head = 10
-            file = args[0]
-        elif no_of_args == 3:  # when using -n [number] flag
-            if args[0] != "-n":
-                out.append("wrong flags")
-                return
-            size_of_head = int(args[1])
-            file = args[2]
-
-        self._read_file(file, size_of_head, out)
+            self._read_first_n_lines_from_file(args[0], 10, out)
+        elif no_of_args == 3 and args[0] == "-n" and args[1].isnumeric():
+            self._read_first_n_lines_from_file(args[2], int(args[1]), out)
+        else:
+            raise ApplicationExcecutionError("Invalid Arguments")
 
 
-class Tail:
+class Tail(Application):
 
-    """
-    By default writes the last 10 lines of a file to standard output,
-    or an inputted number of lines with flag -n.
-    """
+    """prints the last n (10 if n is not specified) lines of a given file or stdin"""
 
-    def _read_file(self, out, file, size_of_tail):
+    def _read_last_n_lines_from_file(self, file, n, out):
         with open(file) as f:
             lines = f.readlines()
             no_of_lines = len(lines)
-            display_length = min(no_of_lines, size_of_tail)
+            display_length = min(no_of_lines, n)
+            content = []
             for i in range(0, display_length):
-                out.append(lines[no_of_lines - display_length + i])
+                content.append(lines[no_of_lines - display_length + i])
+            out.append("".join(content))
 
     def exec(self, args, out, in_pipe):
         no_of_args = len(args)
-        if no_of_args != 1 and no_of_args != 3:
-            out.append("wrong number of command line arguments")
-            return
-        if no_of_args == 1:
-            size_of_tail = 10
-            file = args[0]
-        if no_of_args == 3:
-            if args[0] != "-n":
-                out.append("wrong flags")
-            else:
-                size_of_tail = int(args[1])
-                file = args[2]
-
-        self._read_file(out, file, size_of_tail)
-
-
-class Clear:
-    def exec(self, args, out, in_pipe):
-        # Windows users -> cls
-        # Mac/Linux users -> clear
-        os.system("cls||clear")
-
-
-class Exit:
-    def exec(self, args, out, in_pipe):
-        sys.exit(0)
-
-class Uniq:
-    """
-    Detects and deletes adjacent duplicate lines from an input file/stdin
-    and prints the result to stdout.
-    USAGE:
-        uniq [OPTIONS] [FILE]
-    ARGS:
-        [OPTIONS]
-            -i = flag ignores case (case insensitive)
-        [FILE] = file name, if not specified use stdin
-    """
-
-    def _uniq_lines(self, out, lines, case_insensitive):
-        """
-        Print unique adjacent lines to stdout whilst maintaining insertion order.
-        """
-        #print(f"LINES TO TEST = {lines}, Case={case}")
-        i = 0
-        uniq_lines = []
-        while i < len(lines):
-            if case_insensitive and len(uniq_lines) > 0 and lines[i].lower() == uniq_lines[-1].lower(): # Check if current and previous lines are equal (case-insensitive)
-                pass # If so, only add it once
-            elif len(uniq_lines) > 0 and lines[i] == uniq_lines[-1]:  # Check if current and previous lines are equal 
-                pass # If so, only add it once
-            else:
-                uniq_lines.append(lines[i])  # If not equal then just add current line
-            i += 1
-        out.append("".join(uniq_lines))
-        
-    def _read_file(self, out, file_name, case_insensitive):
-        with open(file_name) as file:
-            lines = file.readlines()
-        file.close()
-        self._uniq_lines(out, lines, case_insensitive)
-
-    def exec(self, args, out, in_pipe):
-        num_of_args = len(args)
-        if in_pipe:
-            lines = out.pop().splitlines(keepends=True)
-            self._uniq_lines(out, lines, num_of_args == 1 and args[0] == '-i')
-            return
-        if num_of_args != 1 and num_of_args != 2:
-            out.append("Wrong number of command line arguments")
-            return
-        case_insensitive = num_of_args == 2
-        if not case_insensitive:
-            file_name = args[0]
+        if no_of_args == 0 and in_pipe:  # get input from stdin
+            self._read_last_n_lines_from_file(out.pop(), 10, out)
+        elif no_of_args == 1:  # default case
+            self._read_last_n_lines_from_file(args[0], 10, out)
+        elif no_of_args == 3 and args[0] == "-n" and args[1].isnumeric():
+            self._read_last_n_lines_from_file(args[2], int(args[1]), out)
         else:
-            if (args[0] != "-i"):  # Case insensitive flag.
-                out.append("Wrong flags")
-                return
-            file_name = args[1]
-        self._read_file(out, file_name, case_insensitive)
+            raise ApplicationExcecutionError("Invalid Arguments")
 
-class Grep:
+
+class Grep(Application):
+
+    """searches for lines containing a match to the specified pattern"""
+
+    def _find_matches_from_stdin(self, pattern, lines, out):
+        contents = []
+        for line in lines:
+            if re.match(pattern, line):
+                contents.append(line)
+        out.append("\n".join(contents))
+
+    def _find_matches_from_files(self, pattern, files, out):
+        multiple_files = len(files) > 1
+        contents = []
+        for file in files:
+            with open(file) as f:
+                lines = f.readlines()
+                self._grep(pattern, multiple_files, contents, file, lines)
+        out.append("\n".join(contents))
+
+    def _grep(self, pattern, multiple_files, contents, file, lines):
+        for line in lines:
+            line = line.replace("\n", "")
+            if re.match(pattern, line):
+                if multiple_files:
+                    contents.append(f"{file}:{line}")
+                else:
+                    contents.append(line)
+
     def exec(self, args, out, in_pipe):
         if len(args) < 1:
-            out.append("wrong number of command line arguments")
-            return
-        elif len(args) == 1 and in_pipe:
-            pattern = args[0]
-            lines = out.pop().split("\n")
-            contents = []
-            for line in lines:
-                if re.match(pattern, line):
-                    contents.append(line)
-            out.append("\n".join(contents))
+            raise ApplicationExcecutionError("Invalid Arguments")
+        elif len(args) == 1:
+            if not in_pipe:
+                raise ApplicationExcecutionError("Invalid Arguments")
+            self._find_matches_from_stdin(args[0], out.pop().split("\n"), out)
         else:
-            pattern = args[0]
-            files = args[1:]
-            contents = []
-            for file in files:
-                with open(file) as f:
-                    lines = f.readlines()
-                    for line in lines:
-                        line = line.replace("\n", "")
-                        if re.match(pattern, line):
-                            if len(files) > 1:
-                                contents.append(f"{file}:{line}")
-                            else:
-                                contents.append(line)
-            out.append("\n".join(contents))
+            self._find_matches_from_files(args[0], args[1:], out)
 
 
-class Find:
+class Cut(Application):
+    """
+    Cuts out sections from each line of a given file or stdin and prints the result to stdout.
+
+    cut OPTIONS [FILE]
+
+    - `OPTION` specifies the bytes to extract from each line:
+        - `-b 1,2,3` extracts 1st, 2nd and 3rd bytes.
+        - `-b 1-3,5-7` extracts the bytes from 1st to 3rd and from 5th to 7th.
+        - `-b -3,5-` extracts the bytes from the beginning of line to 3rd, and from 5th to the end of line.
+    - `FILE` is the name of the file. If not specified, uses stdin.
+    """
+
+    def _get_section(self, no_of_bytes_param, line):
+        """
+        Returns the extracted section from given line.
+        """
+        result = ""
+        for param in no_of_bytes_param:
+            if len(param) == 1 and int(param) <= len(line):  # Single byte arg. e.g. -b n
+                result += self._single_param(line, param)
+            elif len(param) == 2:
+                # -b -n (from first byte to nth byte) or -b n- (from nth byte to last byte)
+                if param[0] == "-":  # Case -b -n
+                    result += line[: int(param[1])]
+                elif param[1] == "-":  # Case -b n-
+                    result += str(line[int(param[0]) - 1 :])
+                    break
+            elif len(param) == 3:
+                # -b n-m (from nth byte to mth byte)
+                result += line[int(param[0]) - 1 : int(param[2])]
+        return result
+
+    def _single_param(self, line, param):
+        if int(param) == 1:
+            return line[0]
+        return line[int(param)]
+
+    def _calculate(self, no_of_bytes_param, lines):
+        """
+        Returns the result to print to stdout.
+        """
+        result = ""
+        for line in lines:
+            result += self._get_section(no_of_bytes_param, line.strip()) + "\n"
+        return result[:-1]
+
+    def exec(self, args, out, in_pipe):
+        no_of_bytes_param = args[1].split(",")
+        no_of_bytes_param.sort()
+        if len(args) == 2:
+            if not in_pipe:
+                raise ApplicationExcecutionError("Invalid Arguments")
+            args = out.pop()  # get input from stdin
+            lines = args.splitlines(keepends=False)
+        else:
+            file_name = args[2]
+            with open(file_name) as file:
+                lines = file.readlines()
+        out.append(self._calculate(no_of_bytes_param, lines))
+
+
+
+class Find(Application):
 
     """
     Finds all files with the given pattern in the given directory
@@ -234,32 +241,86 @@ class Find:
     current directory.
     """
 
-    def exec(self, args, out, in_pipe):
+    def _get_path_and_pattern(self, args):
         num_of_args = len(args)
-        if num_of_args == 2:
-            if args[0] != "-name":
-                out.append("first argument must be '-name'")
-                return
-            else:
-                path = "./"
-                pattern = args[1]
-        elif num_of_args == 3:
-            if args[1] != "-name":
-                out.append("second arguement must be '-name'")
-                return
-            else:
-                path = args[0]
-                pattern = args[2]
+        if num_of_args == 2 and args[0] == "-name":
+            return "./", args[1]
+        elif num_of_args == 3 and args[1] == "-name":
+            return args[0], args[2]
         else:
-            out.append("incorrect command line arguements")
-            return
+            raise ApplicationExcecutionError("Invalid Arguments")
 
+    def exec(self, args, out, in_pipe):
+        path, pattern = self._get_path_and_pattern(args)
         file_names = "\n".join(glob.iglob(path + "/**/" + pattern, recursive=True))
-
         out.append(file_names)
 
 
-class Sort:
+class Uniq(Application):
+
+    """
+    Detects and deletes adjacent duplicate lines from an input file/stdin
+    and prints the result to stdout.
+
+    uniq [OPTIONS] [FILE]
+
+    - `OPTIONS`:
+        - `-i` ignores case when doing comparison (case insensitive)
+    - `FILE` is the name of the file. If not specified, uses stdin.
+    """
+
+    def _prev_and_current_line_equal(self, case_insensitive, line, uniq_lines):
+        if case_insensitive:
+            return len(uniq_lines) > 0 and line.lower() == uniq_lines[-1].lower()
+        else:
+            return len(uniq_lines) > 0 and line == uniq_lines[-1]
+
+    def _uniq_lines(self, out, lines, case_insensitive):
+        uniq_lines = []
+        for line in lines:
+            if not self._prev_and_current_line_equal(
+                case_insensitive, line, uniq_lines
+            ):
+                uniq_lines.append(line)
+        out.append("".join(uniq_lines))
+
+    def _read_file(self, out, file_name, case_insensitive):
+        with open(file_name) as file:
+            lines = file.readlines()
+        return lines
+
+    def _correct_no_of_args(self, num_of_args, in_pipe):
+        if not in_pipe:
+            return num_of_args == 1 or num_of_args == 2
+        else:
+            return num_of_args == 0 or num_of_args == 1
+
+    def _correct_flags(self, no_of_args, args, in_pipe):
+        if not in_pipe:
+            if no_of_args == 2:
+                return args[0] == "-i"
+        else:
+            if no_of_args == 1:
+                return args[0] == "-i"
+        return True
+
+    def exec(self, args, out, in_pipe):
+        num_of_args = len(args)
+        case_insensitive = False
+        if not self._correct_no_of_args(
+            num_of_args, in_pipe
+        ) or not self._correct_flags(num_of_args, args, in_pipe):
+            raise ApplicationExcecutionError("Invalid Arguments")
+        if len(args) > 0:
+            case_insensitive = args[0] == "-i"
+        if in_pipe:
+            lines = out.pop().splitlines(keepends=True)
+        else:
+            lines = self._read_file(out, args[-1], case_insensitive)
+        self._uniq_lines(out, lines, case_insensitive)
+
+
+class Sort(Application):
     """
     Sorts the contents of a file/stdin line by line and prints the result to stdout.
 
@@ -269,138 +330,82 @@ class Sort:
         - `-r` sorts lines in reverse order
     - `FILE` is the name of the file. If not specified, uses stdin.
     """
+
     def _sort_contents(self, contents, out, reverse=False):
         if contents:
             contents.sort(reverse=reverse)
-            # contents.remove("\n") # validate so only try to remove if new line is actually in the list
             out.append("".join(contents))
 
     def _read_file(self, file_name, out):
-        try:
-            with open(file_name) as f:
-                return f.readlines()
-        except FileNotFoundError:
-            out.append(f"File Not Found: {file_name}")
-            return None
+        with open(file_name) as f:
+            return f.readlines()
 
     def _input_from_stdin(self, out):
-        try:
-            result = out.pop()
-            if type(result) is list:
-                return result
-            elif type(result) is str:
-                return result.splitlines(keepends=True)
-            else:
-                raise TypeError()
-        except IndexError:
-            out.append("No Input Specified - sort")
-            return None
-        except TypeError:
-            out.append("Unknown Stdin Input - sort")
-            return None
+        result = out.pop()
+        if type(result) is list:
+            return result
+        elif type(result) is str:
+            return result.splitlines(keepends=True)
+        else:
+            raise ApplicationExcecutionError("Unkown Type Of Stdin")
+
+    def _reverse_options(self, args, out, num_of_args):
+        if num_of_args == 1:
+            contents_of_input = self._input_from_stdin(out)
+        elif num_of_args == 2:
+            contents_of_input = self._read_file(args[1], out)
+        else:
+            raise ApplicationExcecutionError("Invalid Arguments")
+        self._sort_contents(contents_of_input, out, True)
 
     def exec(self, args, out, in_pipe):
         num_of_args = len(args)
-        if num_of_args == 0:
+        if num_of_args == 0 and in_pipe:
             contents_of_input = self._input_from_stdin(out)
             self._sort_contents(contents_of_input, out)
         elif args[0] == "-r":
-            if num_of_args == 1:
-                contents_of_input = self._input_from_stdin(out)
-                self._sort_contents(contents_of_input, out, True)
-            elif num_of_args == 2:
-                file_name = args[1]
-                contents_of_input = self._read_file(file_name, out)
-                self._sort_contents(contents_of_input, out, True)
-            else:
-                out.append("Invalid Arguments - sort")
+            self._reverse_options(args, out, num_of_args)
         elif num_of_args == 1:
             file_name = args[0]
             contents_of_input = self._read_file(file_name, out)
             self._sort_contents(contents_of_input, out)
         else:
-            out.append("Invalid Arguments - sort")
+            raise ApplicationExcecutionError("Invalid Arguments")
 
-class Cut:
-    """
-    Cuts out sections from each line of given file or stdin
-    and prints result to stdout.
-    USAGE:
-        cut [OPTIONS] [FILE]
-    ARGS:
-        [OPTIONS]
-            -b = specifies bytes to extract from EACH line
-        [FILE] = file name, if not specified use stdin
-    """
-    
-    def _get_section(self, no_of_bytes_param, line) -> str:
-        """
-        Returns the extracted section from given line.
-        """
-        result = ""
-        for param in no_of_bytes_param:
-            if len(param) == 1 and int(param) <= len(line): # Single byte arg. e.g. -b n
-                if int(param) == 1:
-                    result += line[0]
-                else:
-                    result += (line[int(param)])
-            elif len(param) == 2:
-                # -b -n (from first byte to nth byte) or -b n- (from nth byte to last byte) 
-                if param[0] == '-': # Case -b -n
-                    result += (line[:int(param[1])])
-                elif param[1] == '-': # Case -b n-
-                    result += (str(line[int(param[0])-1:]))
-                    break
-            elif len(param) == 3:
-                # -b n-m (from nth byte to mth byte)
-                result += (line[int(param[0])-1:int(param[2])])
-        return result
-    
-    def _exec_cut(self, no_of_bytes_param, lines):
-        '''
-        Returns the result to print to stdout.
-        '''
-        result = ""
-        for line in lines:
-            result += self._get_section(no_of_bytes_param, line.strip()) + "\n"
-        return result[:-1]
+
+class Clear(Application):
+
+    """brings the command line to the top of the shell"""
+
+    def exec(self, args, out, in_pipe):
+        # Windows users -> cls
+        # Mac/Linux users -> clear
+        os.system("cls||clear")
+
+
+class Exit(Application):
+
+    """quits the shell"""
+
+    def exec(self, args, out, in_pipe):
+        sys.exit(0)
+
+
+class UnsafeDecorator:
+    def __init__(self, application, call):
+        self.application = application
+        self.call = call
 
     def exec(self, args, out, in_pipe):
         try:
-            no_of_bytes_param = args[1].split(",")
-            no_of_bytes_param.sort()
-
-            if (in_pipe):
-                lines = out.pop().splitlines(keepends=False)
-                out.append(self._exec_cut(no_of_bytes_param, lines))
-                return
-
-            file_name = args[2]
-            with open(file_name) as file:
-                lines = file.readlines()
-                out.append(self._exec_cut(no_of_bytes_param, lines))
-            file.close()
-
-        except IndexError:
-            out.append("Incorrect arguments")
-            return
-
-APPLICATIONS = {
-    "pwd": Pwd(),
-    "cd": Cd(),
-    "echo": Echo(),
-    "ls": Ls(),
-    "cat": Cat(),
-    "head": Head(),
-    "tail": Tail(),
-    "grep": Grep(),
-    "clear": Clear(),
-    "exit": Exit(),
-    "uniq": Uniq(),
-    "find": Find(),
-    "sort": Sort(),
-    "cut": Cut(),
-}
+            self.application.exec(args, out, in_pipe)
+        except KeyError:
+            out.append(f"Unsupported Application: {self.call.raw_command}\n")
+        except OSError:
+            out.append(f"OS Error: {self.call.raw_command}\n")
+        except ApplicationExcecutionError as e:
+            out.append(f"{e.message}: {self.call.raw_command}\n")
+        # except IndexError
 
 
 def save_result_to_file(file_name, result):
@@ -409,14 +414,33 @@ def save_result_to_file(file_name, result):
     f.close()
 
 
+def application_factory(app):
+    application = {
+        "pwd": Pwd,
+        "cd": Cd,
+        "ls": Ls,
+        "cat": Cat,
+        "echo": Echo,
+        "head": Head,
+        "tail": Tail,
+        "grep": Grep,
+        "cut": Cut,
+        "find": Find,
+        "uniq": Uniq,
+        "sort": Sort,
+        "clear": Clear,
+        "exit": Exit,
+    }
+    return application[app]()
+
+
 def execute_application(call, out, in_pipe):
     app = call.application
     args = call.args
-    try:
-        application = APPLICATIONS[app]
-    except KeyError:
-        out.append(f"Unsupported Application: {app}")
-        return
+    if(app[0] == '_'):
+        application = UnsafeDecorator(application_factory(app[1:]), call)
+    else:
+        application = application_factory(app)
     application.exec(args, out, in_pipe)
     if call.file_output:
         save_result_to_file(call.file_output, out.pop())
