@@ -122,3 +122,4 @@ class Seq(Command):
     def eval(self, out):
         for commands in self.commands:
             commands.eval(out)
+            

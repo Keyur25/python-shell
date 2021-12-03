@@ -179,3 +179,4 @@ class CallTreeVisitor(Visitor_Recursive):
                     self.application = arg.strip()
             if child.data == "redirection":
                 self._redirection(child)
+                
