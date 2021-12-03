@@ -86,9 +86,9 @@ class PipeIterator:
 class Pipe(Command):
 
     """
-    Stores all calls in a pipe
-    lhs = pipe/call
-    rhs = call
+    A Pipe is made up of Calls and/or other Pipes where:
+        lhs = pipe | call
+        rhs = call
     """
     def __init__(self, lhs, rhs):
         self.calls = (lhs, rhs)
