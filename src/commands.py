@@ -7,6 +7,7 @@ from abc import ABCMeta, abstractmethod
 from typing import Optional, Deque
 
 class Command(metaclass=ABCMeta):
+    """Abstract class method for Commands Call, Pipe, and Seq"""
     @classmethod
     def __subclasshook__(cls, subclass):
         return hasattr(subclass, "eval") and callable(subclass.exec)
@@ -17,7 +18,8 @@ class Command(metaclass=ABCMeta):
 
 class Call(Command):
     def __init__(self, raw_command):
-        self.raw_command = raw_command     
+        self.raw_command = raw_command 
+
         self.application = None
         self.args = []
         self.file_output = None
@@ -34,6 +36,10 @@ class Call(Command):
         command_substituition_visitor.visit(call_tree)
 
     def _visit_call_tree(self, call_tree):
+        """
+        visits call tree and extracts application, arguments, and
+        file output (if any).
+        """
         call_tree_visitor = CallTreeVisitor()
         call_tree_visitor.visit_topdown(call_tree)
 
@@ -52,6 +58,9 @@ class Call(Command):
             execute_application(self, out, in_pipe)
 
 class PipeIterator:
+    """
+    Allows ordered iteration over all calls in a pipe
+    """
     def _calls(self, pipe):
         calls = []
         while type(pipe.lhs()) is Pipe:
@@ -75,6 +84,12 @@ class PipeIterator:
 
 
 class Pipe(Command):
+
+    """
+    Stores all calls in a pipe
+    lhs = pipe/call
+    rhs = call
+    """
     def __init__(self, lhs, rhs):
         self.calls = (lhs, rhs)
 
@@ -88,6 +103,10 @@ class Pipe(Command):
         return PipeIterator(self)
 
     def eval(self, out):
+        """
+        For every command in a pipe, excluding the first, we take input from out
+        as args by passing in in_pipe as true when evaluating each call
+        """
         first_call = True
         for call in self:
             if first_call:

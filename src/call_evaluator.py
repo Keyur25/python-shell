@@ -8,6 +8,13 @@ class CommandSubstituitionVisitor(Visitor_Recursive):
         self.out = out
     
     def _eval_command_substituition(self, command, out):
+        """
+        Evaluates command substitution and returns the number of outputs
+        to be taken from out. e.g.
+
+        `echo foo` -> 1
+        `echo foo; echo bar' -> 2
+        """
         from commands import Seq
         from command_evaluator import extract_raw_commands
         
@@ -22,13 +29,16 @@ class CommandSubstituitionVisitor(Visitor_Recursive):
         return len(raw_commands)
 
     def backquoted(self, tree):
-        no_of_cmds = self._eval_command_substituition(tree.children[0], self.out)
+        """
+        If the call contains a backquote, we evaluate and replace the backquoted
+        argument with the results in out
+        """
+        no_of_outputs = self._eval_command_substituition(tree.children[0], self.out)
         res = []
-        # gets all the results of the subcommand from out
-        for _ in range(no_of_cmds):
+        for _ in range(no_of_outputs): #get correct no. of outputs from out
             res.append(self.out.pop().replace("\n", " ").strip())
         res.reverse()
-        tree.children[0] = " ".join(res)
+        tree.children[0] = " ".join(res) # replace backquoted command with outputs
 
 
 class QuotedVisitor(Visitor_Recursive):
