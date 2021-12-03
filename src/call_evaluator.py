@@ -97,6 +97,7 @@ class RedirectionVisitor(Visitor_Recursive):
 
 
 class CallTreeVisitor(Visitor_Recursive):
+    
     def __init__(self):
         self.application = None
         self.args = []
@@ -109,14 +110,6 @@ class CallTreeVisitor(Visitor_Recursive):
             self.file_output = redirection_visitor.file_name
         else:
             self.args.append(redirection_visitor.file_name)
-
-    def _globbing(self, arg, unquoted_asterisk):
-        if unquoted_asterisk:
-            globbing = glob(arg)
-            if globbing:
-                self.args.append(" ".join(globbing))
-                return
-        self.args.append(arg)
     
     def _extract_quoted_content(self, node):
         if len(node.children) > 0:
@@ -133,7 +126,6 @@ class CallTreeVisitor(Visitor_Recursive):
                 double_quoted_args += self._extract_quoted_content(child)
         return double_quoted_args
 
-
     def _quoted(self, tree):
         quoted_args = ""
         for child in tree.children:
@@ -142,6 +134,14 @@ class CallTreeVisitor(Visitor_Recursive):
             elif(child.data == "single_quoted" or child.data == "backquoted"):
                 quoted_args += self._extract_quoted_content(child)
         return quoted_args
+
+    def _globbing(self, arg, unquoted_asterisk):
+        if unquoted_asterisk:
+            globbing = glob(arg)
+            if globbing:
+                self.args.append(" ".join(globbing))
+                return
+        self.args.append(arg)
         
     def _argument(self, tree):
         unquoted_asterisk = False
@@ -155,7 +155,6 @@ class CallTreeVisitor(Visitor_Recursive):
                     arg += self._quoted(child)
         self._globbing(arg, unquoted_asterisk)
                 
-
     def atom(self, tree):
         for child in tree.children:
             if child.data == "redirection":
@@ -163,20 +162,24 @@ class CallTreeVisitor(Visitor_Recursive):
             if child.data == "argument":
                 self._argument(child)
 
+    def _application(self, tree):
+        if(type(tree.children[0]) is Token):
+            self.application = str(tree.children[0])
+        else: # extact application from quoted
+            application = ""
+            for child in tree.children:
+                if type(child) is Token:
+                    arg += str(child) 
+                if type(child) is Tree:
+                    if child.data == "quoted":
+                        arg += self._quoted(child)
+            self.application = application
+
+
     def call(self, tree):
         for child in tree.children:
             if child.data == "argument":
-                arg = ""
-                if(type(child.children[0]) is Token):
-                    self.application = str(child.children[0])
-                else:
-                    for child in child.children:
-                        if type(child) is Token:
-                            arg += str(child) 
-                        if type(child) is Tree:
-                            if child.data == "quoted":
-                                arg += self._quoted(child)
-                    self.application = arg.strip()
+                self._application(child)
             if child.data == "redirection":
                 self._redirection(child)
                 
