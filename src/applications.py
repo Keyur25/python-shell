@@ -189,7 +189,9 @@ class Cut(Application):
         """
         result = ""
         for param in no_of_bytes_param:
-            if len(param) == 1 and int(param) <= len(line):  # Single byte arg. e.g. -b n
+            if len(param) == 1 and int(param) <= len(
+                line
+            ):  # Single byte arg. e.g. -b n
                 result += self._single_param(line, param)
             elif len(param) == 2:
                 # -b -n (from first byte to nth byte) or -b n- (from nth byte to last byte)
@@ -230,7 +232,6 @@ class Cut(Application):
             with open(file_name) as file:
                 lines = file.readlines()
         out.append(self._calculate(no_of_bytes_param, lines))
-
 
 
 class Find(Application):
@@ -284,7 +285,7 @@ class Uniq(Application):
                 uniq_lines.append(line)
         out.append("".join(uniq_lines))
 
-    def _read_file(self, out, file_name, case_insensitive):
+    def _read_file(self, file_name):
         with open(file_name) as file:
             lines = file.readlines()
         return lines
@@ -316,7 +317,7 @@ class Uniq(Application):
         if in_pipe:
             lines = out.pop().splitlines(keepends=True)
         else:
-            lines = self._read_file(out, args[-1], case_insensitive)
+            lines = self._read_file(args[-1])
         self._uniq_lines(out, lines, case_insensitive)
 
 
@@ -336,7 +337,7 @@ class Sort(Application):
             contents.sort(reverse=reverse)
             out.append("".join(contents))
 
-    def _read_file(self, file_name, out):
+    def _read_file(self, file_name):
         with open(file_name) as f:
             return f.readlines()
 
@@ -353,7 +354,7 @@ class Sort(Application):
         if num_of_args == 1:
             contents_of_input = self._input_from_stdin(out)
         elif num_of_args == 2:
-            contents_of_input = self._read_file(args[1], out)
+            contents_of_input = self._read_file(args[1])
         else:
             raise ApplicationExcecutionError("Invalid Arguments")
         self._sort_contents(contents_of_input, out, True)
@@ -367,7 +368,7 @@ class Sort(Application):
             self._reverse_options(args, out, num_of_args)
         elif num_of_args == 1:
             file_name = args[0]
-            contents_of_input = self._read_file(file_name, out)
+            contents_of_input = self._read_file(file_name)
             self._sort_contents(contents_of_input, out)
         else:
             raise ApplicationExcecutionError("Invalid Arguments")
@@ -437,7 +438,7 @@ def application_factory(app):
 def execute_application(call, out, in_pipe):
     app = call.application
     args = call.args
-    if(app[0] == '_'):
+    if app[0] == "_":
         application = UnsafeDecorator(application_factory(app[1:]), call)
     else:
         application = application_factory(app)
