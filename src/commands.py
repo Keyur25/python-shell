@@ -3,15 +3,15 @@ from call_evaluator import CommandSubstituitionVisitor
 from call_evaluator import CallTreeVisitor
 from applications import execute_application
 
-import abc
+from abc import ABCMeta, abstractmethod
 from typing import Optional, Deque
 
-class Command(metaclass=abc.ABCMeta):
+class Command(metaclass=ABCMeta):
     @classmethod
     def __subclasshook__(cls, subclass):
         return hasattr(subclass, "eval") and callable(subclass.exec)
 
-    @abc.abstractmethod
+    @abstractmethod
     def eval(self, out: Deque, in_pipe: Optional[bool] = False) -> None:
         raise NotImplementedError
 

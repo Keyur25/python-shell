@@ -22,7 +22,6 @@ class CommandSubstituitionVisitor(Visitor_Recursive):
         return len(raw_commands)
 
     def backquoted(self, tree):
-        pass
         no_of_cmds = self._eval_command_substituition(tree.children[0], self.out)
         res = []
         # gets all the results of the subcommand from out
