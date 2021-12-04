@@ -10,9 +10,10 @@ class CommandTreeVisitor(Visitor_Recursive):
     and extracts each raw command and what they are seperated by
     e.g.
     echo "foo"; echo bar | echo -> [Call, Pipe]
-                                    where -> Call.raw_command = echo "foo"
-                                             Pipe.lhs = echo bar
-                                             Pipe.rhs = echo
+                          
+                          where -> Call.raw_command = echo "foo"
+                                   Pipe.lhs = echo bar
+                                   Pipe.rhs = echo
     """
 
     def __init__(self):
