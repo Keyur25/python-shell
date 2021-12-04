@@ -221,7 +221,7 @@ class CallTreeVisitor(Visitor_Recursive):
     def call(self, tree):
         for child in tree.children:
             if child.data == "argument":
-                #An argument which is a child of a call will always contain the argument.
+                #an argument which is a child of a call will always contain the application.
                 self._application(child)
             if child.data == "redirection":
                 self._redirection(child)
