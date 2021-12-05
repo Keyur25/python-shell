@@ -123,12 +123,12 @@ class TestCommandEvaluator(unittest.TestCase):
     
     def test_extract_quoted_content_with_content_between_quotes(self):
         parser = Parser()
-        command_tree = parser.command_level_parse("'sdfsdf'")
+        command_tree = parser.command_level_parse("'foo'")
         raw_commands = extract_raw_commands(command_tree)
 
         self.assertEqual(len(raw_commands), 1)
         self.assertEqual(type(raw_commands[0]), Call)
-        self.assertEqual(raw_commands[0].raw_command, "'sdfsdf'")
+        self.assertEqual(raw_commands[0].raw_command, "'foo'")
 
     def test_extract_quoted_content_with_no_content_between_quotes(self):
         parser = Parser()
@@ -140,13 +140,47 @@ class TestCommandEvaluator(unittest.TestCase):
         self.assertEqual(raw_commands[0].raw_command, "''")
     
     def test_double_quotes(self):
-        pass
+        parser = Parser()
+        command_tree = parser.command_level_parse('"bar"')
+        raw_commands = extract_raw_commands(command_tree)
+        self.assertEqual(len(raw_commands), 1)
+        self.assertEqual(type(raw_commands[0]), Call)
+        self.assertEqual(raw_commands[0].raw_command, '"bar"')
 
     def test_double_quotes_with_nested_backquotes(self):
-        pass
+        parser = Parser()
+        command_tree = parser.command_level_parse('"bar`foo`"')
+        raw_commands = extract_raw_commands(command_tree)
+        self.assertEqual(len(raw_commands), 1)
+        self.assertEqual(type(raw_commands[0]), Call)
+        self.assertEqual(raw_commands[0].raw_command, '"bar`foo`"')
 
     def test_quoted_with_single_quotes(self):
-        pass 
+        parser = Parser()
+        command_tree = parser.command_level_parse("'bar'")
+        raw_commands = extract_raw_commands(command_tree)
+
+        self.assertEqual(len(raw_commands), 1)
+        self.assertEqual(type(raw_commands[0]), Call)
+        self.assertEqual(raw_commands[0].raw_command, "'bar'") 
+
+    def test_quoted_with_backquotes(self):
+        parser = Parser()
+        command_tree = parser.command_level_parse("`echo foo`")
+        raw_commands = extract_raw_commands(command_tree)
+
+        self.assertEqual(len(raw_commands), 1)
+        self.assertEqual(type(raw_commands[0]), Call)
+        self.assertEqual(raw_commands[0].raw_command, "`echo foo`") 
+    
+    def test_call_with_no_quotes(self):
+        parser = Parser()
+        command_tree = parser.command_level_parse("echo bar")
+        raw_commands = extract_raw_commands(command_tree)
+
+        self.assertEqual(len(raw_commands), 1)
+        self.assertEqual(type(raw_commands[0]), Call)
+        self.assertEqual(raw_commands[0].raw_command, "echo bar") 
 
 
 
