@@ -6,6 +6,8 @@ from collections import deque
 from shell import eval as shell_evaluator
 import applications as app
 from commands import Call, Pipe, Seq
+from parser import Parser
+from command_evaluator import extract_raw_commands
 
 # TODO: Search up mutant testing
 # TODO: research hypothesis libary for Python
@@ -104,6 +106,54 @@ class TestShell(unittest.TestCase):
         result = self.out.pop().splitlines()
         result.sort()
         self.assertListEqual(result, ["hello.txt"])
+
+class TestCommandEvaluator(unittest.TestCase):
+
+    def test_pipe(self):
+        parser = Parser()
+        command_tree = parser.command_level_parse("echo foo | echo")
+        raw_commands = extract_raw_commands(command_tree)
+
+        self.assertEqual(len(raw_commands), 1)
+        self.assertEqual(type(raw_commands[0]), Pipe)
+        self.assertEqual(type(raw_commands[0].lhs()), Call)
+        self.assertEqual(type(raw_commands[0].rhs()), Call)
+        self.assertEqual(raw_commands[0].lhs().raw_command.strip(), "echo foo")
+        self.assertEqual(raw_commands[0].rhs().raw_command.strip(), "echo")
+    
+    def test_extract_quoted_content_with_content_between_quotes(self):
+        parser = Parser()
+        command_tree = parser.command_level_parse("'sdfsdf'")
+        raw_commands = extract_raw_commands(command_tree)
+
+        self.assertEqual(len(raw_commands), 1)
+        self.assertEqual(type(raw_commands[0]), Call)
+        self.assertEqual(raw_commands[0].raw_command, "'sdfsdf'")
+
+    def test_extract_quoted_content_with_no_content_between_quotes(self):
+        parser = Parser()
+        command_tree = parser.command_level_parse("''")
+        raw_commands = extract_raw_commands(command_tree)
+
+        self.assertEqual(len(raw_commands), 1)
+        self.assertEqual(type(raw_commands[0]), Call)
+        self.assertEqual(raw_commands[0].raw_command, "''")
+    
+    def test_double_quotes(self):
+        pass
+
+    def test_double_quotes_with_nested_backquotes(self):
+        pass
+
+    def test_quoted_with_single_quotes(self):
+        pass 
+
+
+
+
+
+
+
 
 
 if __name__ == "__main__":
