@@ -60,7 +60,7 @@ class CommandTreeVisitor(Visitor_Recursive):
                 quoted_args += self._double_quoted(child)
             elif(child.data == "single_quoted"):
                 quoted_args += self._extract_quoted_content(child, "'")
-            elif(child.data == "backquoted"):
+            else: #backquoted
                 quoted_args += self._extract_quoted_content(child, "`")
         return quoted_args
                 
