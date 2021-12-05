@@ -1,4 +1,4 @@
-from lark import Lark, UnexpectedCharacters
+from lark import Lark, UnexpectedCharacters, UnexpectedEOF
 from pathlib import Path
 
 class Call:
@@ -29,11 +29,11 @@ class Parser:
     def command_level_parse(self, input):
         try:
             return self.command_level_parser.parse(input)
-        except UnexpectedCharacters:
+        except UnexpectedCharacters and UnexpectedEOF:
             return False
 
     def call_level_parse(self, input):
         try:
             return self.call_command_parser.parse(input)
-        except UnexpectedCharacters:
+        except UnexpectedCharacters and UnexpectedEOF:
             return False
