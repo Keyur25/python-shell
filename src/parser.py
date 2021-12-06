@@ -1,14 +1,6 @@
 from lark import Lark, UnexpectedCharacters, UnexpectedEOF
 from pathlib import Path
 
-class Call:
-    def __init__(self, raw_command):
-        self.raw_command = raw_command
-
-class Pipe:
-    def __init__(self, call1, call2): # list of Call's
-        self.calls = [call1, call2]
-
 class Parser:
     def __init__(self):
         self.command_level_parser = Lark(self._get_command_level_grammar(), start="command")
