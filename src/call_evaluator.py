@@ -48,27 +48,6 @@ class CommandSubstituitionVisitor(Visitor_Recursive):
         tree.children[0] = " ".join(res) # replace backquoted command with outputs
 
 
-class QuotedVisitor(Visitor_Recursive):
-    """
-    Visits a quoted tree, a sub tree of a call tree,
-    and extracts the quoted text
-    """
-    def __init__(self):
-        self.extracted_quotes = ""
-
-    def double_quoted(self, tree):
-        if(len(tree.children) > 0):
-            self.extracted_quotes += tree.children[0]
-
-    def single_quoted(self, tree):
-        if(len(tree.children) > 0):
-            self.extracted_quotes += tree.children[0]
-
-    def backquoted(self, tree):
-        if(len(tree.children) > 0):
-            self.extracted_quotes += tree.children[0]
-
-
 class RedirectionVisitor(Visitor_Recursive):
     """
     Visits a redirection tree, a sub tree of a call tree,
