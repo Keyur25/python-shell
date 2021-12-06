@@ -69,9 +69,9 @@ class RedirectionVisitor(Visitor_Recursive):
 
     def _extract_quoted_content(self, node):
         if len(node.children) > 0:
-            return node.children[0]
+            self.file_name+=str(node.children[0])
         else:
-            return  ""
+            self.file_name+=""
 
     def _double_quoted(self, tree):
         """
@@ -82,7 +82,7 @@ class RedirectionVisitor(Visitor_Recursive):
             if(type(child) is Token):
                 self.file_name+=str(child)
             else: # backquoted
-                self.file_name += self._extract_quoted_content(child)
+                self._extract_quoted_content(child)
 
 
     def _quoted(self, tree):
