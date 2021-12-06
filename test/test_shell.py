@@ -10,7 +10,7 @@ from parser import Parser
 from command_evaluator import extract_raw_commands
 from collections import deque
 
-from call_evaluator import CommandSubstituitionVisitor, CallTreeVisitor
+from call_evaluator import CommandSubstituitionVisitor, CallTreeVisitor, InvalidCommandSubstitution
 
 
 # TODO: Search up mutant testing
@@ -196,17 +196,61 @@ class TestCallEvaluator(unittest.TestCase):
         self.assertEqual(len(self.out), 0)
         self.assertEqual(len(call_tree_visitor.args), 1)
         self.assertEqual(call_tree_visitor.args[0], "foo")
+        self.assertEqual(call_tree_visitor.file_output, None)
     
     def test_command_substitution_visitor_with_invalid_command(self):
         call_tree = self.parser.call_level_parse("echo `'''`")
         
         command_substituition_visitor = CommandSubstituitionVisitor(self.out)
-        command_substituition_visitor.visit(call_tree)
 
-        self.assertEqual(len(self.out), 1)
-        self.assertEqual(self.out.pop(), "Unrecognized Input: '''")
+        self.assertRaises(InvalidCommandSubstitution, command_substituition_visitor.visit, call_tree)
 
-        #bug!! program still continues!
+    def test_redirection_visitor_input(self):
+        call_tree = self.parser.call_level_parse("echo < file.txt")
+
+        call_tree_visitor = CallTreeVisitor()
+        call_tree_visitor.visit_topdown(call_tree)
+
+        self.assertEqual(call_tree_visitor.application, "echo")
+        self.assertEqual(len(call_tree_visitor.args), 1)
+        self.assertEqual(call_tree_visitor.args[0], "file.txt")
+        self.assertEqual(call_tree_visitor.file_output, None)
+    
+    def test_redirection_visitor_output(self):
+        call_tree = self.parser.call_level_parse("echo foo > file.txt")
+
+        call_tree_visitor = CallTreeVisitor()
+        call_tree_visitor.visit_topdown(call_tree)
+
+        self.assertEqual(call_tree_visitor.application, "echo")
+        self.assertEqual(len(call_tree_visitor.args), 1)
+        self.assertEqual(call_tree_visitor.args[0], "foo")
+        self.assertEqual(call_tree_visitor.file_output, "file.txt")
+
+    def test_redirection_visitor_with_single_quoted_file_name(self):
+        call_tree = self.parser.call_level_parse("echo < 'file.txt'")
+
+        call_tree_visitor = CallTreeVisitor()
+        call_tree_visitor.visit_topdown(call_tree)
+
+        self.assertEqual(call_tree_visitor.application, "echo")
+        self.assertEqual(len(call_tree_visitor.args), 1)
+        self.assertEqual(call_tree_visitor.args[0], "file.txt")
+    
+    # def test_redirection_visitor_with_back_quoted_file_name(self):
+    #     call_tree = self.parser.call_level_parse("echo < `echo file.txt`")
+
+    #     call_tree_visitor = CallTreeVisitor()
+    #     call_tree_visitor.visit_topdown(call_tree)
+
+    #     self.assertEqual(call_tree_visitor.application, "echo")
+    #     self.assertEqual(len(call_tree_visitor.args), 1)
+    #     self.assertEqual(call_tree_visitor.args[0], "file.txt")
+    
+    
+    
+
+
     
     
 

@@ -3,6 +3,15 @@ from lark.visitors import Visitor_Recursive
 from lark import Tree, Token
 from parser import Parser
 
+class InvalidCommandSubstitution(Exception):
+
+    """raised when there is an invalid command substitution"""
+
+    def __init__(self, message):
+        self.message = message
+        super().__init__(self.message)
+
+
 class CommandSubstituitionVisitor(Visitor_Recursive):
     """
     Visits a call tree, and replaces backquoted content
@@ -28,7 +37,6 @@ class CommandSubstituitionVisitor(Visitor_Recursive):
         parser = Parser()
         command_tree = parser.command_level_parse(command)
         if not command_tree:
-            out.append(f"Unrecognized Input: {command}")
             return
         raw_commands = extract_raw_commands(command_tree)
         seq = Seq(raw_commands)
@@ -41,6 +49,8 @@ class CommandSubstituitionVisitor(Visitor_Recursive):
         argument with the results in out.
         """
         no_of_outputs = self._eval_command_substituition(tree.children[0], self.out)
+        if not no_of_outputs:
+            raise InvalidCommandSubstitution("Invalid Command Substitution: " + str(tree.children[0]))
         res = []
         for _ in range(no_of_outputs): #get correct no. of outputs from out
             res.append(self.out.pop().replace("\n", " ").strip())
