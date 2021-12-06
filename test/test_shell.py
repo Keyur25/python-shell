@@ -8,6 +8,10 @@ import applications as app
 from commands import Call, Pipe, Seq
 from parser import Parser
 from command_evaluator import extract_raw_commands
+from collections import deque
+
+from call_evaluator import CommandSubstituitionVisitor, CallTreeVisitor
+
 
 # TODO: Search up mutant testing
 # TODO: research hypothesis libary for Python
@@ -175,6 +179,36 @@ class TestCommandEvaluator(unittest.TestCase):
         self.assertEqual(type(raw_commands[0]), Call)
         self.assertEqual(raw_commands[0].raw_command, "echo bar") 
 
+class TestCallEvaluator(unittest.TestCase):
+    def setUp(self):
+        self.parser = Parser()
+        self.out = deque()
+
+    def test_command_substitution_visitor(self):
+        call_tree = self.parser.call_level_parse("echo `echo foo`")
+        
+        command_substituition_visitor = CommandSubstituitionVisitor(self.out)
+        command_substituition_visitor.visit(call_tree)
+
+        call_tree_visitor = CallTreeVisitor()
+        call_tree_visitor.visit_topdown(call_tree)
+
+        self.assertEqual(len(self.out), 0)
+        self.assertEqual(len(call_tree_visitor.args), 1)
+        self.assertEqual(call_tree_visitor.args[0], "foo")
+    
+    def test_command_substitution_visitor_with_invalid_command(self):
+        call_tree = self.parser.call_level_parse("echo `'''`")
+        
+        command_substituition_visitor = CommandSubstituitionVisitor(self.out)
+        command_substituition_visitor.visit(call_tree)
+
+        self.assertEqual(len(self.out), 1)
+        self.assertEqual(self.out.pop(), "Unrecognized Input: '''")
+
+        #bug!! program still continues!
+    
+    
 
 if __name__ == "__main__":
     unittest.main()
