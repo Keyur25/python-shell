@@ -236,16 +236,52 @@ class TestCallEvaluator(unittest.TestCase):
         self.assertEqual(call_tree_visitor.application, "echo")
         self.assertEqual(len(call_tree_visitor.args), 1)
         self.assertEqual(call_tree_visitor.args[0], "file.txt")
+
+    def test_redirection_visitor_with_double_quoted_file_name(self):
+        call_tree = self.parser.call_level_parse('echo < "file.txt"')
+
+        call_tree_visitor = CallTreeVisitor()
+        call_tree_visitor.visit_topdown(call_tree)
+
+        self.assertEqual(call_tree_visitor.application, "echo")
+        self.assertEqual(len(call_tree_visitor.args), 1)
+        self.assertEqual(call_tree_visitor.args[0], "file.txt")
     
-    # def test_redirection_visitor_with_back_quoted_file_name(self):
-    #     call_tree = self.parser.call_level_parse("echo < `echo file.txt`")
+    def test_redirection_visitor_with_back_quoted_file_name(self):
+        call_tree = self.parser.call_level_parse("echo < `echo file.txt`")
 
-    #     call_tree_visitor = CallTreeVisitor()
-    #     call_tree_visitor.visit_topdown(call_tree)
+        call_tree_visitor = CallTreeVisitor()
+        call_tree_visitor.visit_topdown(call_tree)
 
-    #     self.assertEqual(call_tree_visitor.application, "echo")
-    #     self.assertEqual(len(call_tree_visitor.args), 1)
-    #     self.assertEqual(call_tree_visitor.args[0], "file.txt")
+        self.assertEqual(call_tree_visitor.application, "echo")
+        self.assertEqual(len(call_tree_visitor.args), 1)
+        self.assertEqual(call_tree_visitor.args[0], "echo file.txt")
+
+    def test_redirection_visitor_with_nested_back_quoted_file_name_in_double_quotes(self):
+        call_tree = self.parser.call_level_parse('echo < "`echo file.txt`"')
+
+        call_tree_visitor = CallTreeVisitor()
+        call_tree_visitor.visit_topdown(call_tree)
+
+        self.assertEqual(call_tree_visitor.application, "echo")
+        self.assertEqual(len(call_tree_visitor.args), 1)
+        self.assertEqual(call_tree_visitor.args[0], "echo file.txt")
+
+    def test_redirection_visitor_with_empty_quoted_file_name(self):
+        call_tree = self.parser.call_level_parse("echo < ''")
+
+        call_tree_visitor = CallTreeVisitor()
+        call_tree_visitor.visit_topdown(call_tree)
+
+        self.assertEqual(call_tree_visitor.application, "echo")
+        self.assertEqual(len(call_tree_visitor.args), 1)
+        self.assertEqual(call_tree_visitor.args[0], "")
+    
+
+    
+
+
+
     
     
     
