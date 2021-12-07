@@ -414,6 +414,9 @@ class TestCallEvaluator(unittest.TestCase):
         self.assertEqual(args[0], "file.txt")
         self.assertEqual(file_output, None)
 
+    def test_invalid_call(self):
+        self.assertEqual(self.parser.call_level_parse("echo AAA >> file.txt"), False)
+
 
 
 if __name__ == "__main__":
