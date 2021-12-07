@@ -180,6 +180,7 @@ class TestCommandEvaluator(unittest.TestCase):
         self.assertEqual(raw_commands[0].raw_command, "echo bar") 
 
 class TestCallEvaluator(unittest.TestCase):
+
     def setUp(self):
         self.parser = Parser()
         self.out = deque()
@@ -316,6 +317,16 @@ class TestCallEvaluator(unittest.TestCase):
         self.assertEqual(call_tree_visitor.application, "echo")
         self.assertEqual(len(call_tree_visitor.args), 1)
         self.assertEqual(call_tree_visitor.args[0], "fizz")
+
+    def test_call_visitor_with_empty(self):
+        call_tree = self.parser.call_level_parse("echo ''")
+
+        call_tree_visitor = CallTreeVisitor()
+        call_tree_visitor.visit_topdown(call_tree)
+
+        self.assertEqual(call_tree_visitor.application, "echo")
+        self.assertEqual(len(call_tree_visitor.args), 1)
+        self.assertEqual(call_tree_visitor.args[0], "")
     
     def test_call_with_two_arguments_containing_no_quotes(self):
         call_tree = self.parser.call_level_parse('echo foo bar')
@@ -358,7 +369,14 @@ class TestCallEvaluator(unittest.TestCase):
         self.assertEqual(len(call_tree_visitor.args), 1)
         self.assertEqual(call_tree_visitor.args[0], "*.txt")
 
-    # insert globbing test
+    def test_argument_with_globbing(self):
+        call_tree = self.parser.call_level_parse('echo *.txt')
+
+        call_tree_visitor = CallTreeVisitor()
+        call_tree_visitor.visit_topdown(call_tree)
+        self.assertEqual(call_tree_visitor.application, "echo")
+        self.assertEqual(len(call_tree_visitor.args), 1)
+        self.assertEqual(call_tree_visitor.args[0], "requirements.txt")
 
     def test_call_with_quoted_application(self):
         call_tree = self.parser.call_level_parse('"echo" foo')
@@ -379,19 +397,6 @@ class TestCallEvaluator(unittest.TestCase):
         self.assertEqual(call_tree_visitor.application, "echo")
         self.assertEqual(len(call_tree_visitor.args), 1)
         self.assertEqual(call_tree_visitor.args[0], "foo")
-
-
-    
-
-
-
-    
-    
-    
-
-
-    
-    
 
 if __name__ == "__main__":
     unittest.main()
