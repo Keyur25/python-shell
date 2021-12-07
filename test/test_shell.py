@@ -215,6 +215,15 @@ class TestCallEvaluator(unittest.TestCase):
             print("error: failed to remove unittests directory")
             exit(1)
 
+    def _call_tree_visitor(self, cmd):
+        call_tree = self.parser.call_level_parse(cmd)
+
+        call_tree_visitor = CallTreeVisitor()
+        call_tree_visitor.visit_topdown(call_tree)
+
+        return call_tree_visitor.application, call_tree_visitor.args, call_tree_visitor.file_output
+
+
     def test_command_substitution_visitor(self):
         call_tree = self.parser.call_level_parse("echo `echo foo`")
         
@@ -237,216 +246,173 @@ class TestCallEvaluator(unittest.TestCase):
         self.assertRaises(InvalidCommandSubstitution, command_substituition_visitor.visit, call_tree)
 
     def test_redirection_visitor_input(self):
-        call_tree = self.parser.call_level_parse("echo < file.txt")
+        application, args, file_output = self._call_tree_visitor("echo < file.txt")
 
-        call_tree_visitor = CallTreeVisitor()
-        call_tree_visitor.visit_topdown(call_tree)
-
-        self.assertEqual(call_tree_visitor.application, "echo")
-        self.assertEqual(len(call_tree_visitor.args), 1)
-        self.assertEqual(call_tree_visitor.args[0], "file.txt")
-        self.assertEqual(call_tree_visitor.file_output, None)
+        self.assertEqual(application, "echo")
+        self.assertEqual(len(args), 1)
+        self.assertEqual(args[0], "file.txt")
+        self.assertEqual(file_output, None)
     
     def test_redirection_visitor_output(self):
-        call_tree = self.parser.call_level_parse("echo foo > file.txt")
+        application, args, file_output = self._call_tree_visitor("echo foo > file.txt")
 
-        call_tree_visitor = CallTreeVisitor()
-        call_tree_visitor.visit_topdown(call_tree)
-
-        self.assertEqual(call_tree_visitor.application, "echo")
-        self.assertEqual(len(call_tree_visitor.args), 1)
-        self.assertEqual(call_tree_visitor.args[0], "foo")
-        self.assertEqual(call_tree_visitor.file_output, "file.txt")
+        self.assertEqual(application, "echo")
+        self.assertEqual(len(args), 1)
+        self.assertEqual(args[0], "foo")
+        self.assertEqual(file_output, "file.txt")
 
     def test_redirection_visitor_with_single_quoted_file_name(self):
-        call_tree = self.parser.call_level_parse("echo < 'file.txt'")
+        application, args, file_output = self._call_tree_visitor("echo < 'file.txt'")
 
-        call_tree_visitor = CallTreeVisitor()
-        call_tree_visitor.visit_topdown(call_tree)
-
-        self.assertEqual(call_tree_visitor.application, "echo")
-        self.assertEqual(len(call_tree_visitor.args), 1)
-        self.assertEqual(call_tree_visitor.args[0], "file.txt")
+        self.assertEqual(application, "echo")
+        self.assertEqual(len(args), 1)
+        self.assertEqual(args[0], "file.txt")
+        self.assertEqual(file_output, None)
 
     def test_redirection_visitor_with_double_quoted_file_name(self):
-        call_tree = self.parser.call_level_parse('echo < "file.txt"')
+        application, args, file_output = self._call_tree_visitor('echo < "file.txt"')
 
-        call_tree_visitor = CallTreeVisitor()
-        call_tree_visitor.visit_topdown(call_tree)
-
-        self.assertEqual(call_tree_visitor.application, "echo")
-        self.assertEqual(len(call_tree_visitor.args), 1)
-        self.assertEqual(call_tree_visitor.args[0], "file.txt")
+        self.assertEqual(application, "echo")
+        self.assertEqual(len(args), 1)
+        self.assertEqual(args[0], "file.txt")
+        self.assertEqual(file_output, None)
     
     def test_redirection_visitor_with_back_quoted_file_name(self):
-        call_tree = self.parser.call_level_parse("echo < `echo file.txt`")
+        application, args, file_output = self._call_tree_visitor("echo < `echo file.txt`")
 
-        call_tree_visitor = CallTreeVisitor()
-        call_tree_visitor.visit_topdown(call_tree)
-
-        self.assertEqual(call_tree_visitor.application, "echo")
-        self.assertEqual(len(call_tree_visitor.args), 1)
-        self.assertEqual(call_tree_visitor.args[0], "echo file.txt")
+        self.assertEqual(application, "echo")
+        self.assertEqual(len(args), 1)
+        self.assertEqual(args[0], "echo file.txt")
+        self.assertEqual(file_output, None)
 
     def test_redirection_visitor_with_nested_back_quoted_file_name_in_double_quotes(self):
-        call_tree = self.parser.call_level_parse('echo < "`echo file.txt`"')
+        application, args, file_output = self._call_tree_visitor('echo < "`echo file.txt`"')
 
-        call_tree_visitor = CallTreeVisitor()
-        call_tree_visitor.visit_topdown(call_tree)
-
-        self.assertEqual(call_tree_visitor.application, "echo")
-        self.assertEqual(len(call_tree_visitor.args), 1)
-        self.assertEqual(call_tree_visitor.args[0], "echo file.txt")
+        self.assertEqual(application, "echo")
+        self.assertEqual(len(args), 1)
+        self.assertEqual(args[0], "echo file.txt")
+        self.assertEqual(file_output, None)
 
     def test_redirection_visitor_with_empty_quoted_file_name(self):
-        call_tree = self.parser.call_level_parse("echo < ''")
+        application, args, file_output = self._call_tree_visitor("echo < ''")
 
-        call_tree_visitor = CallTreeVisitor()
-        call_tree_visitor.visit_topdown(call_tree)
-
-        self.assertEqual(call_tree_visitor.application, "echo")
-        self.assertEqual(len(call_tree_visitor.args), 1)
-        self.assertEqual(call_tree_visitor.args[0], "")
+        self.assertEqual(application, "echo")
+        self.assertEqual(len(args), 1)
+        self.assertEqual(args[0], "")
+        self.assertEqual(file_output, None)
     
     def test_call_visitor_with_single_quotes(self):
-        call_tree = self.parser.call_level_parse("echo 'foo'")
+        application, args, file_output = self._call_tree_visitor("echo 'foo'")
 
-        call_tree_visitor = CallTreeVisitor()
-        call_tree_visitor.visit_topdown(call_tree)
-
-        self.assertEqual(call_tree_visitor.application, "echo")
-        self.assertEqual(len(call_tree_visitor.args), 1)
-        self.assertEqual(call_tree_visitor.args[0], "foo")
+        self.assertEqual(application, "echo")
+        self.assertEqual(len(args), 1)
+        self.assertEqual(args[0], "foo")
+        self.assertEqual(file_output, None)
     
     def test_call_visitor_with_double_quotes(self):
-        call_tree = self.parser.call_level_parse('echo "bar"')
+        application, args, file_output = self._call_tree_visitor('echo "bar"')
 
-        call_tree_visitor = CallTreeVisitor()
-        call_tree_visitor.visit_topdown(call_tree)
-
-        self.assertEqual(call_tree_visitor.application, "echo")
-        self.assertEqual(len(call_tree_visitor.args), 1)
-        self.assertEqual(call_tree_visitor.args[0], "bar")
+        self.assertEqual(application, "echo")
+        self.assertEqual(len(args), 1)
+        self.assertEqual(args[0], "bar")
+        self.assertEqual(file_output, None)
 
     def test_call_visitor_with_back_quotes(self):
-        call_tree = self.parser.call_level_parse('echo `fizz`')
+        application, args, file_output = self._call_tree_visitor('echo `fizz`')
 
-        call_tree_visitor = CallTreeVisitor()
-        call_tree_visitor.visit_topdown(call_tree)
-
-        self.assertEqual(call_tree_visitor.application, "echo")
-        self.assertEqual(len(call_tree_visitor.args), 1)
-        self.assertEqual(call_tree_visitor.args[0], "fizz")
+        self.assertEqual(application, "echo")
+        self.assertEqual(len(args), 1)
+        self.assertEqual(args[0], "fizz")
+        self.assertEqual(file_output, None)
     
     def test_call_visitor_with_back_quotes_nested_in_double_quotes(self):
-        call_tree = self.parser.call_level_parse('echo "`fizz`"')
+        application, args, file_output = self._call_tree_visitor('echo "`fizz`"')
 
-        call_tree_visitor = CallTreeVisitor()
-        call_tree_visitor.visit_topdown(call_tree)
-
-        self.assertEqual(call_tree_visitor.application, "echo")
-        self.assertEqual(len(call_tree_visitor.args), 1)
-        self.assertEqual(call_tree_visitor.args[0], "fizz")
+        self.assertEqual(application, "echo")
+        self.assertEqual(len(args), 1)
+        self.assertEqual(args[0], "fizz")
+        self.assertEqual(file_output, None)
 
     def test_call_visitor_with_empty(self):
-        call_tree = self.parser.call_level_parse("echo ''")
+        application, args, file_output = self._call_tree_visitor("echo ''")
 
-        call_tree_visitor = CallTreeVisitor()
-        call_tree_visitor.visit_topdown(call_tree)
-
-        self.assertEqual(call_tree_visitor.application, "echo")
-        self.assertEqual(len(call_tree_visitor.args), 1)
-        self.assertEqual(call_tree_visitor.args[0], "")
+        self.assertEqual(application, "echo")
+        self.assertEqual(len(args), 1)
+        self.assertEqual(args[0], "")
+        self.assertEqual(file_output, None)
     
     def test_call_with_two_arguments_containing_no_quotes(self):
-        call_tree = self.parser.call_level_parse('echo foo bar')
+        application, args, file_output = self._call_tree_visitor('echo foo bar')
 
-        call_tree_visitor = CallTreeVisitor()
-        call_tree_visitor.visit_topdown(call_tree)
-
-        self.assertEqual(call_tree_visitor.application, "echo")
-        self.assertEqual(len(call_tree_visitor.args), 2)
-        self.assertEqual(call_tree_visitor.args[0], "foo")
-        self.assertEqual(call_tree_visitor.args[1], "bar")
+        self.assertEqual(application, "echo")
+        self.assertEqual(len(args), 2)
+        self.assertEqual(args[0], "foo")
+        self.assertEqual(args[1], "bar")
+        self.assertEqual(file_output, None)
 
     def test_call_with_argument_containing_quotes_with_spaces(self):
-        call_tree = self.parser.call_level_parse('echo "foo bar"')
+        application, args, file_output = self._call_tree_visitor('echo "foo bar"')
 
-        call_tree_visitor = CallTreeVisitor()
-        call_tree_visitor.visit_topdown(call_tree)
-
-        self.assertEqual(call_tree_visitor.application, "echo")
-        self.assertEqual(len(call_tree_visitor.args), 1)
-        self.assertEqual(call_tree_visitor.args[0], "foo bar")
+        self.assertEqual(application, "echo")
+        self.assertEqual(len(args), 1)
+        self.assertEqual(args[0], "foo bar")
+        self.assertEqual(file_output, None)
     
     def test_call_with_argument_containing_quoted_and_unquoted_content(self):
-        call_tree = self.parser.call_level_parse('echo f"o"o')
+        application, args, file_output = self._call_tree_visitor('echo f"o"o')
 
-        call_tree_visitor = CallTreeVisitor()
-        call_tree_visitor.visit_topdown(call_tree)
-
-        self.assertEqual(call_tree_visitor.application, "echo")
-        self.assertEqual(len(call_tree_visitor.args), 1)
-        self.assertEqual(call_tree_visitor.args[0], "foo")
+        self.assertEqual(application, "echo")
+        self.assertEqual(len(args), 1)
+        self.assertEqual(args[0], "foo")
+        self.assertEqual(file_output, None)
     
     def test_call_with_argument_containing_quoted_asterisk(self):
-        call_tree = self.parser.call_level_parse('echo "*.txt"')
+        application, args, file_output = self._call_tree_visitor('echo "*.txt"')
 
-        call_tree_visitor = CallTreeVisitor()
-        call_tree_visitor.visit_topdown(call_tree)
-
-        self.assertEqual(call_tree_visitor.application, "echo")
-        self.assertEqual(len(call_tree_visitor.args), 1)
-        self.assertEqual(call_tree_visitor.args[0], "*.txt")
+        self.assertEqual(application, "echo")
+        self.assertEqual(len(args), 1)
+        self.assertEqual(args[0], "*.txt")
+        self.assertEqual(file_output, None)
 
     def test_argument_with_globbing(self):
-        
-        call_tree = self.parser.call_level_parse('echo unittests/*.txt')
+        application, args, file_output = self._call_tree_visitor('echo unittests/*.txt')
 
-        call_tree_visitor = CallTreeVisitor()
-        call_tree_visitor.visit_topdown(call_tree)
-        self.assertEqual(call_tree_visitor.application, "echo")
-        self.assertEqual(len(call_tree_visitor.args), 1)
-        self.assertEqual(call_tree_visitor.args[0], "unittests/test1.txt unittests/test3.txt unittests/test2.txt")
+        self.assertEqual(application, "echo")
+        self.assertEqual(len(args), 1)
+        self.assertEqual(args[0], "unittests/test1.txt unittests/test3.txt unittests/test2.txt")
+        self.assertEqual(file_output, None)
 
     def test_argument_with_unquoted_asterisk_and_globbing_equal_to_false(self):
-        call_tree = self.parser.call_level_parse('echo *.lark')
+        application, args, file_output = self._call_tree_visitor('echo *.lark')
 
-        call_tree_visitor = CallTreeVisitor()
-        call_tree_visitor.visit_topdown(call_tree)
-        self.assertEqual(call_tree_visitor.application, "echo")
-        self.assertEqual(len(call_tree_visitor.args), 1)
-        self.assertEqual(call_tree_visitor.args[0], "*.lark")
+        self.assertEqual(application, "echo")
+        self.assertEqual(len(args), 1)
+        self.assertEqual(args[0], "*.lark")
+        self.assertEqual(file_output, None)
 
     def test_call_with_quoted_application(self):
-        call_tree = self.parser.call_level_parse('"echo" foo')
+        application, args, file_output = self._call_tree_visitor('"echo" foo')
 
-        call_tree_visitor = CallTreeVisitor()
-        call_tree_visitor.visit_topdown(call_tree)
-
-        self.assertEqual(call_tree_visitor.application, "echo")
-        self.assertEqual(len(call_tree_visitor.args), 1)
-        self.assertEqual(call_tree_visitor.args[0], "foo")
+        self.assertEqual(application, "echo")
+        self.assertEqual(len(args), 1)
+        self.assertEqual(args[0], "foo")
+        self.assertEqual(file_output, None)
     
     def test_call_with_part_quoted_and_unquoted_application(self):
-        call_tree = self.parser.call_level_parse("e'ch'o foo")
+        application, args, file_output = self._call_tree_visitor("e'ch'o foo")
 
-        call_tree_visitor = CallTreeVisitor()
-        call_tree_visitor.visit_topdown(call_tree)
-
-        self.assertEqual(call_tree_visitor.application, "echo")
-        self.assertEqual(len(call_tree_visitor.args), 1)
-        self.assertEqual(call_tree_visitor.args[0], "foo")
+        self.assertEqual(application, "echo")
+        self.assertEqual(len(args), 1)
+        self.assertEqual(args[0], "foo")
+        self.assertEqual(file_output, None)
     
     def test_call_with_prefix_redirection(self):
-        call_tree = self.parser.call_level_parse("< file.txt echo")
+        application, args, file_output = self._call_tree_visitor("< file.txt echo")
 
-        call_tree_visitor = CallTreeVisitor()
-        call_tree_visitor.visit_topdown(call_tree)
-
-        self.assertEqual(call_tree_visitor.application, "echo")
-        self.assertEqual(len(call_tree_visitor.args), 1)
-        self.assertEqual(call_tree_visitor.args[0], "file.txt")
+        self.assertEqual(application, "echo")
+        self.assertEqual(len(args), 1)
+        self.assertEqual(args[0], "file.txt")
+        self.assertEqual(file_output, None)
 
 
 
