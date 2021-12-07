@@ -89,16 +89,15 @@ class RedirectionVisitor(Visitor_Recursive):
         for child in tree.children:
             if(child.data == "double_quoted"):
                 self._double_quoted(child)
-            elif(child.data == "single_quoted" or child.data == "backquoted"):
+            else: # single quoted or backquoted
                 self._extract_quoted_content(child)
 
     def argument(self, tree):
         for child in tree.children:
             if type(child) is Token:
                 self.file_name += str(child)
-            if type(child) is Tree:
-                if child.data == "quoted":
-                    self._quoted(child)
+            else:
+                self._quoted(child)
 
     def redirection(self, tree):
         self.io_type = str(tree.children[0])
@@ -153,7 +152,7 @@ class CallTreeVisitor(Visitor_Recursive):
         for child in tree.children:
             if(child.data == "double_quoted"):
                 quoted_args += self._double_quoted(child)
-            elif(child.data == "single_quoted" or child.data == "backquoted"):
+            else: # single quoted or backquoted
                 quoted_args += self._extract_quoted_content(child)
         return quoted_args
 
@@ -176,9 +175,8 @@ class CallTreeVisitor(Visitor_Recursive):
             if type(child) is Token:
                 arg += str(child)
                 unquoted_asterisk = "*" in str(child)    
-            if type(child) is Tree:
-                if child.data == "quoted":
-                    arg += self._quoted(child)
+            else:
+                arg += self._quoted(child)
         self._globbing(arg, unquoted_asterisk)
                 
     def atom(self, tree):
@@ -198,9 +196,8 @@ class CallTreeVisitor(Visitor_Recursive):
         for child in tree.children:
             if type(child) is Token:
                 application += str(child) 
-            if type(child) is Tree:
-                if child.data == "quoted":
-                    application += self._quoted(child)
+            else:
+                application += self._quoted(child)
             self.application = application
 
 
@@ -209,6 +206,6 @@ class CallTreeVisitor(Visitor_Recursive):
             if child.data == "argument":
                 #an argument which is a child of a call will always contain the application.
                 self._application(child)
-            if child.data == "redirection":
+            elif child.data == "redirection":
                 self._redirection(child)
                 

@@ -181,9 +181,39 @@ class TestCommandEvaluator(unittest.TestCase):
 
 class TestCallEvaluator(unittest.TestCase):
 
+    @classmethod
+    def prepare(cls, cmdline):
+        args = [
+            "/bin/bash",
+            "-c",
+            cmdline,
+        ]
+        p = subprocess.run(args, capture_output=True)
+        return p.stdout.decode()
+
     def setUp(self):
+        p = subprocess.run(["mkdir", "unittests"], stdout=subprocess.DEVNULL)
+        if p.returncode != 0:
+            print("error: failed to create unittest directory")
+            exit(1)
+        filesystem_setup = ";".join(
+            [
+                "cd unittests",
+                "echo AAA > test1.txt",
+                "echo BBB > test2.txt",
+                "echo CCC > test3.txt",
+            ]
+        )
+        self.prepare(filesystem_setup)
         self.parser = Parser()
         self.out = deque()
+
+    
+    def tearDown(self):
+        p = subprocess.run(["rm", "-r", "unittests"], stdout=subprocess.DEVNULL)
+        if p.returncode != 0:
+            print("error: failed to remove unittests directory")
+            exit(1)
 
     def test_command_substitution_visitor(self):
         call_tree = self.parser.call_level_parse("echo `echo foo`")
@@ -370,13 +400,23 @@ class TestCallEvaluator(unittest.TestCase):
         self.assertEqual(call_tree_visitor.args[0], "*.txt")
 
     def test_argument_with_globbing(self):
-        call_tree = self.parser.call_level_parse('echo *.txt')
+        
+        call_tree = self.parser.call_level_parse('echo unittests/*.txt')
 
         call_tree_visitor = CallTreeVisitor()
         call_tree_visitor.visit_topdown(call_tree)
         self.assertEqual(call_tree_visitor.application, "echo")
         self.assertEqual(len(call_tree_visitor.args), 1)
-        self.assertEqual(call_tree_visitor.args[0], "requirements.txt")
+        self.assertEqual(call_tree_visitor.args[0], "unittests/test1.txt unittests/test3.txt unittests/test2.txt")
+
+    def test_argument_with_unquoted_asterisk_and_globbing_equal_to_false(self):
+        call_tree = self.parser.call_level_parse('echo *.lark')
+
+        call_tree_visitor = CallTreeVisitor()
+        call_tree_visitor.visit_topdown(call_tree)
+        self.assertEqual(call_tree_visitor.application, "echo")
+        self.assertEqual(len(call_tree_visitor.args), 1)
+        self.assertEqual(call_tree_visitor.args[0], "*.lark")
 
     def test_call_with_quoted_application(self):
         call_tree = self.parser.call_level_parse('"echo" foo')
@@ -397,6 +437,18 @@ class TestCallEvaluator(unittest.TestCase):
         self.assertEqual(call_tree_visitor.application, "echo")
         self.assertEqual(len(call_tree_visitor.args), 1)
         self.assertEqual(call_tree_visitor.args[0], "foo")
+    
+    def test_call_with_prefix_redirection(self):
+        call_tree = self.parser.call_level_parse("< file.txt echo")
+
+        call_tree_visitor = CallTreeVisitor()
+        call_tree_visitor.visit_topdown(call_tree)
+
+        self.assertEqual(call_tree_visitor.application, "echo")
+        self.assertEqual(len(call_tree_visitor.args), 1)
+        self.assertEqual(call_tree_visitor.args[0], "file.txt")
+
+
 
 if __name__ == "__main__":
     unittest.main()
