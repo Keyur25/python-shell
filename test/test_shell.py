@@ -425,17 +425,14 @@ class TestCommands(unittest.TestCase):
     def test_call(self):
         call = Call("echo foo")
         call.eval(self.out)
-
         self.assertEquals(call.application, "echo")
         self.assertEquals(len(call.args), 1)
         self.assertEquals(call.args[0], "foo")
-
         self.assertEquals(self.out.pop().strip(), "foo")
     
     def test_invalid_call(self):
         call = Call("echo AAA >> file.txt")
         call.eval(self.out)
-
         self.assertEquals(self.out.pop(), "Unrecognized Command: echo AAA >> file.txt")
     
     def test_empty_call(self):
