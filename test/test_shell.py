@@ -53,15 +53,48 @@ class TestShell(unittest.TestCase):
         shell_evaluator("pwd", self.out)
         start_dir = self.out.pop()
         shell_evaluator("cd unittests", self.out)
-
         shell_evaluator(cmd, self.out)
         shell_result = self.out.pop()
-
         shell_evaluator(f"cd {start_dir}", self.out)
-
         return shell_result
 
-    """********************************************************* Test Safe Applications *******************************************************************"""
+class TestApplications(unittest.TestCase):
+    @classmethod
+    def prepare(cls, cmdline):
+        args = [
+            "/bin/bash",
+            "-c",
+            cmdline,
+        ]
+        p = subprocess.run(args, capture_output=True)
+        return p.stdout.decode()
+
+    def setUp(self):
+        p = subprocess.run(["mkdir", "unittests"], stdout=subprocess.DEVNULL)
+        if p.returncode != 0:
+            print("error: failed to create unittest directory")
+            exit(1)
+        filesystem_setup = ";".join(
+            [
+                "cd unittests",
+                "echo 'abcdef had a dog, then they had a book \n When it asdtnnasn it wanted to asjdiansdnainsd it siansdinanis' > test1.txt",
+                "echo BBB > test2.txt",
+                "echo CCC > test3.txt",
+                "mkdir dir1",
+                "echo 'HELLO THERE' > dir1/hello.txt",
+            ]
+        )
+        self.prepare(filesystem_setup)
+        self.out = deque()
+
+    def tearDown(self):
+        p = subprocess.run(["rm", "-r", "unittests"], stdout=subprocess.DEVNULL)
+        if p.returncode != 0:
+            print("error: failed to remove unittests directory")
+            exit(1)
+
+    def test_pwd(self):
+        pass
 
     def test_ls(self):
         ls = app.Ls()
@@ -92,10 +125,6 @@ class TestShell(unittest.TestCase):
     def test_cat_folder(self):
         cat = app.Cat()
         self.assertRaises(FileNotFoundError, cat.exec, ["dir5"], self.out, False)
-
-    """**********************************************************************************************************************************************************"""
-
-    """********************************************************* Test Unsafe Applications *******************************************************************"""
 
     def test_unsafe_ls(self):
         call = Call("_ls unittests/dir1")
