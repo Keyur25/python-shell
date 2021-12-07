@@ -169,18 +169,20 @@ class TestApplications(unittest.TestCase):
             result, ["dir1", "dir2", "test1.txt", "test2.txt", "test3.txt"]
         )
 
-    def test_cat(self):
-        cat = app.Cat()
-        cat.exec(["unittests/test1.txt"], self.out, False)
-        result = self.out.pop()
-        self.assertEqual(
-            result.strip(),
-            "abcdef had a dog, then they had a book \n When it asdtnnasn it wanted to asjdiansdnainsd it siansdinanis",
-        )
-
     def test_cat_no_args(self):
         cat = app.Cat()
         self.assertRaises(app.ApplicationExcecutionError, cat.exec, [], self.out, False)
+
+    def test_cat_no_args_in_pipe(self):
+        self.out.append("unittests/test2.txt")
+        print("unittests/test2.txt".strip())
+        cat = app.Cat()
+        cat.exec([], self.out, True)
+        self.assertEqual(len(self.out), 1)
+        self.assertEqual(
+            self.out.pop().strip(),
+            "BBB",
+        )
 
     def test_cat_invalid_file(self):
         cat = app.Cat()
@@ -192,15 +194,14 @@ class TestApplications(unittest.TestCase):
         cat = app.Cat()
         self.assertRaises(FileNotFoundError, cat.exec, ["dir5"], self.out, False)
 
-    def test_unsafe_ls(self):
-        call = Call("_ls unittests/dir1")
-        call.application = "_ls"
-        call.args = ["unittests/dir1"]
-        u_ls = app.UnsafeDecorator(app.Ls(), call)
-        u_ls.exec(["unittests/dir1"], self.out, False)
-        result = self.out.pop().splitlines()
-        result.sort()
-        self.assertListEqual(result, ["hello.txt"])
+    def test_cat(self):
+        cat = app.Cat()
+        cat.exec(["unittests/test1.txt"], self.out, False)
+        self.assertEqual(len(self.out), 1)
+        self.assertEqual(
+            self.out.pop().strip(),
+            "abcdef had a dog, then they had a book \n When it asdtnnasn it wanted to asjdiansdnainsd it siansdinanis",
+        )
 
 
 class TestCommandEvaluator(unittest.TestCase):

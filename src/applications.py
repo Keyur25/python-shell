@@ -64,7 +64,7 @@ class Cat(Application):
         if not args:
             if not in_pipe:
                 raise ApplicationExcecutionError("Invalid Arguments")
-            args = out.pop()  # get input from stdin
+            args = out.pop().split(" ")  # get input from stdin
         lines = []
         for a in args:
             with open(a.strip()) as f:
