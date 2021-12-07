@@ -203,6 +203,24 @@ class TestApplications(unittest.TestCase):
             "abcdef had a dog, then they had a book \n When it asdtnnasn it wanted to asjdiansdnainsd it siansdinanis",
         )
 
+    def test_echo_no_args(self):
+        echo = app.Echo()
+        echo.exec([], self.out, False)
+        self.assertEqual(len(self.out), 1)
+        self.assertEqual(self.out.pop().strip(), "")
+
+    def test_echo_multiple_args(self):
+        echo = app.Echo()
+        echo.exec(["hello", "world"], self.out, False)
+        self.assertEqual(len(self.out), 1)
+        self.assertEqual(self.out.pop().strip(), "hello world")
+
+    def test_echo(self):
+        echo = app.Echo()
+        echo.exec(["foo bar"], self.out, False)
+        self.assertEqual(len(self.out), 1)
+        self.assertEqual(self.out.pop().strip(), "foo bar")
+
 
 class TestCommandEvaluator(unittest.TestCase):
     def setUp(self):
