@@ -194,16 +194,13 @@ class CallTreeVisitor(Visitor_Recursive):
         including if the application is bound by
         quotes.
         """
-        if(type(tree.children[0]) is Token):
-            self.application = str(tree.children[0])
-        else: # extact application from quoted
-            application = ""
-            for child in tree.children:
-                if type(child) is Token:
-                    application += str(child) 
-                if type(child) is Tree:
-                    if child.data == "quoted":
-                        application += self._quoted(child)
+        application = ""
+        for child in tree.children:
+            if type(child) is Token:
+                application += str(child) 
+            if type(child) is Tree:
+                if child.data == "quoted":
+                    application += self._quoted(child)
             self.application = application
 
 
