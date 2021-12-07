@@ -85,6 +85,7 @@ class TestApplications(unittest.TestCase):
                 "echo BBB > test2.txt",
                 "echo CCC > test3.txt",
                 "mkdir dir1",
+                "echo DDD > dir1/.test3.txt",
                 "mkdir dir2",
                 "echo 'HELLO THERE' > dir1/hello.txt",
             ]
@@ -110,17 +111,17 @@ class TestApplications(unittest.TestCase):
         self.assertEqual(len(self.out), 1)
         self.assertEqual(self.out.pop().strip(), os.getcwd())
 
-    def test_cd_with_no_args(self):
+    def test_cd_no_args(self):
         cd = app.Cd()
         self.assertRaises(app.ApplicationExcecutionError, cd.exec, [], self.out, False)
 
-    def test_cd_with_multiple_args(self):
+    def test_cd_multiple_args(self):
         cd = app.Cd()
         self.assertRaises(
             app.ApplicationExcecutionError, cd.exec, ["dir1", "dir2"], self.out, False
         )
 
-    def test_cd_with_fake_directory(self):
+    def test_cd_fake_directory(self):
         cd = app.Cd()
         self.assertRaises(FileNotFoundError, cd.exec, ["dir3"], self.out, False)
 
@@ -132,9 +133,36 @@ class TestApplications(unittest.TestCase):
         self.assertEqual(old_file_path + "/unittests", os.getcwd())
         cd.exec([".."], self.out, False)
 
-    def test_ls(self):
+    def test_ls_get_directory_no_args(self):
+        ls = app.Ls()
+        self.assertEqual(ls._get_directory([]), os.getcwd())
+
+    def test_ls_get_directory_one_arg(self):
+        ls = app.Ls()
+        self.assertEqual(ls._get_directory(["dir1"]), "dir1")
+
+    def test_ls_get_directory_multiple_args(self):
+        ls = app.Ls()
+        self.assertRaises(
+            app.ApplicationExcecutionError, ls._get_directory, ["dir1", "dir2"]
+        )
+
+    def test_ls_invalid_arg(self):
+        ls = app.Ls()
+        self.assertRaises(FileNotFoundError, ls.exec, ["dir3"], self.out, False)
+
+    def test_ls_hidden_file(self):
+        ls = app.Ls()
+        ls.exec(["unittests/dir1"], self.out, False)
+        self.assertEqual(len(self.out), 1)
+        result = self.out.pop().splitlines()
+        result.sort()
+        self.assertListEqual(result, ["hello.txt"])
+
+    def test_ls_valid_arg(self):
         ls = app.Ls()
         ls.exec(["unittests"], self.out, False)
+        self.assertEqual(len(self.out), 1)
         result = self.out.pop().splitlines()
         result.sort()
         self.assertListEqual(
