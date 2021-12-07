@@ -85,6 +85,7 @@ class TestApplications(unittest.TestCase):
                 "echo BBB > test2.txt",
                 "echo CCC > test3.txt",
                 "mkdir dir1",
+                "mkdir dir2",
                 "echo 'HELLO THERE' > dir1/hello.txt",
             ]
         )
@@ -109,12 +110,36 @@ class TestApplications(unittest.TestCase):
         self.assertEqual(len(self.out), 1)
         self.assertEqual(self.out.pop().strip(), os.getcwd())
 
+    def test_cd_with_no_args(self):
+        cd = app.Cd()
+        self.assertRaises(app.ApplicationExcecutionError, cd.exec, [], self.out, False)
+
+    def test_cd_with_multiple_args(self):
+        cd = app.Cd()
+        self.assertRaises(
+            app.ApplicationExcecutionError, cd.exec, ["dir1", "dir2"], self.out, False
+        )
+
+    def test_cd_with_fake_directory(self):
+        cd = app.Cd()
+        self.assertRaises(FileNotFoundError, cd.exec, ["dir3"], self.out, False)
+
+    def test_cd(self):
+        cd = app.Cd()
+        old_file_path = os.getcwd()
+        cd.exec(["unittests"], self.out, False)
+        self.assertEqual(len(self.out), 0)
+        self.assertEqual(old_file_path + "/unittests", os.getcwd())
+        cd.exec([".."], self.out, False)
+
     def test_ls(self):
         ls = app.Ls()
         ls.exec(["unittests"], self.out, False)
         result = self.out.pop().splitlines()
         result.sort()
-        self.assertListEqual(result, ["dir1", "test1.txt", "test2.txt", "test3.txt"])
+        self.assertListEqual(
+            result, ["dir1", "dir2", "test1.txt", "test2.txt", "test3.txt"]
+        )
 
     def test_cat(self):
         cat = app.Cat()
