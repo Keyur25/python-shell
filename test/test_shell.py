@@ -1,6 +1,8 @@
 import subprocess
 import unittest
 from collections import deque
+import os
+
 # from hypothesis import example, given, strategies as st
 # export PYTHONPATH="./src"
 from shell import eval as shell_evaluator
@@ -13,6 +15,7 @@ from command_evaluator import extract_raw_commands
 # TODO: research hypothesis libary for Python
 #! We can use hypothesis-> See Q&A Lab For Wed Nov 17 -> 42:00
 #! Use property based testing -> Using advanced librarys +3 and good reflection +2 on report
+
 
 class TestShell(unittest.TestCase):
     @classmethod
@@ -58,6 +61,7 @@ class TestShell(unittest.TestCase):
         shell_evaluator(f"cd {start_dir}", self.out)
         return shell_result
 
+
 class TestApplications(unittest.TestCase):
     @classmethod
     def prepare(cls, cmdline):
@@ -93,8 +97,17 @@ class TestApplications(unittest.TestCase):
             print("error: failed to remove unittests directory")
             exit(1)
 
+    def test_pwd_with_args(self):
+        pwd = app.Pwd()
+        self.assertRaises(
+            app.ApplicationExcecutionError, pwd.exec, [""], self.out, False
+        )
+
     def test_pwd(self):
-        pass
+        pwd = app.Pwd()
+        pwd.exec([], self.out, False)
+        self.assertEqual(len(self.out), 1)
+        self.assertEqual(self.out.pop().strip(), os.getcwd())
 
     def test_ls(self):
         ls = app.Ls()
@@ -136,6 +149,7 @@ class TestApplications(unittest.TestCase):
         result.sort()
         self.assertListEqual(result, ["hello.txt"])
 
+
 class TestCommandEvaluator(unittest.TestCase):
     def setUp(self):
         self.parser = Parser()
@@ -154,7 +168,7 @@ class TestCommandEvaluator(unittest.TestCase):
         self.assertEqual(type(raw_commands[0].rhs()), Call)
         self.assertEqual(raw_commands[0].lhs().raw_command.strip(), "echo foo")
         self.assertEqual(raw_commands[0].rhs().raw_command.strip(), "echo")
-    
+
     def test_extract_quoted_content_with_content_between_quotes(self):
         raw_commands = self._get_raw_commands("'foo'")
 
@@ -168,7 +182,7 @@ class TestCommandEvaluator(unittest.TestCase):
         self.assertEqual(len(raw_commands), 1)
         self.assertEqual(type(raw_commands[0]), Call)
         self.assertEqual(raw_commands[0].raw_command, "''")
-    
+
     def test_double_quotes(self):
         raw_commands = self._get_raw_commands('"bar"')
 
@@ -188,21 +202,21 @@ class TestCommandEvaluator(unittest.TestCase):
 
         self.assertEqual(len(raw_commands), 1)
         self.assertEqual(type(raw_commands[0]), Call)
-        self.assertEqual(raw_commands[0].raw_command, "'bar'") 
+        self.assertEqual(raw_commands[0].raw_command, "'bar'")
 
     def test_quoted_with_backquotes(self):
         raw_commands = self._get_raw_commands("`echo foo`")
 
         self.assertEqual(len(raw_commands), 1)
         self.assertEqual(type(raw_commands[0]), Call)
-        self.assertEqual(raw_commands[0].raw_command, "`echo foo`") 
-    
+        self.assertEqual(raw_commands[0].raw_command, "`echo foo`")
+
     def test_call_with_no_quotes(self):
         raw_commands = self._get_raw_commands("echo bar")
 
         self.assertEqual(len(raw_commands), 1)
         self.assertEqual(type(raw_commands[0]), Call)
-        self.assertEqual(raw_commands[0].raw_command, "echo bar") 
+        self.assertEqual(raw_commands[0].raw_command, "echo bar")
 
 
 if __name__ == "__main__":
