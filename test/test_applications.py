@@ -703,3 +703,66 @@ class TestApplications(unittest.TestCase):
                 "abcdef had a dog, then they had a book",
             ],
         )
+
+    """***************** CUT TEST ******************************* """
+    def test_cut_get_section_single_param(self):
+        cut = app.Cut()
+        param = ['1']
+        line = "Hello there"
+        res = cut._get_section(param, line)
+        self.assertEqual(res, "H")
+    
+    def test_cut_get_section_from_n_to_end(self):
+        cut = app.Cut()
+        param = ['3-']
+        line = "Hello there"
+        res = cut._get_section(param, line)
+        self.assertEqual(res, "llo there")
+    
+    def test_cut_get_section_from_start_to_n(self):
+        cut = app.Cut()
+        param = ['-3']
+        line = "Hello there"
+        res = cut._get_section(param, line)
+        self.assertEqual(res, "Hel")
+
+    def test_cut_get_section_from_start_to_m(self):
+        cut = app.Cut()
+        param = ['4-7']
+        line = "Hello there"
+        res = cut._get_section(param, line)
+        self.assertEqual(res, "lo t")
+    
+    def test_cut_get_section_multiple_param(self):
+        cut = app.Cut()
+        param = ['1', '3-4', '7-']
+        line = "Hello there"
+        res = cut._get_section(param, line)
+        self.assertEqual(res, "Hllthere")
+    
+    def test_cut__calculate(self):
+        cut = app.Cut()
+        param = ['1', '3-4', '7-']
+        lines = ['Hello there', 'Loren ipsum dome', "Give me ideas"]
+        res = cut._calculate(param, lines)
+        self.assertEqual(res, 'Hllthere\nLreipsum dome\nGvee ideas')
+    
+    def test_cut_file(self):
+        cut = app.Cut()
+        args = ['-b', '19-38', 'unittests/test1.txt']
+        cut.exec(args, self.out, False)
+        res = self.out.pop().splitlines()
+        self.assertCountEqual(res, ['then they had a book', 'it wanted to asjdian'])
+    
+    def test_cut_pipe(self):
+        cut = app.Cut()
+        self.out.append("Hello World")
+        args = ['-b', '7-9,10']
+        cut.exec(args, self.out, True)
+        res = self.out.pop()
+        self.assertEqual(res, 'Word')
+    
+    def test_cut_invalid_arguments(self):
+        cut = app.Cut()
+        args = ['-b', '7-9,1']
+        self.assertRaises(app.ApplicationExcecutionError, cut.exec, args, self.out, False)
