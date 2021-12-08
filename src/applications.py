@@ -374,7 +374,7 @@ class Sort(Application):
         if num_of_args == 0 and in_pipe:
             contents_of_input = self._input_from_stdin(out)
             self._sort_contents(contents_of_input, out)
-        elif args[0] == "-r":
+        elif num_of_args > 0 and args[0] == "-r":
             self._reverse_options(args, out, num_of_args)
         elif num_of_args == 1:
             file_name = args[0]

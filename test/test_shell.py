@@ -431,6 +431,134 @@ class TestApplications(unittest.TestCase):
             ["q", "r", "s", "t", "u", "v", "w", "x", "y", "z"],
         )
 
+    def test_sort_sort_contents_empty_contents(self):
+        sort = app.Sort()
+        sort._sort_contents([], self.out)
+        self.assertEqual(len(self.out), 0)
+
+    def test_sort_sort_contents_reverse(self):
+        sort = app.Sort()
+        sort._sort_contents(["c", "o", "n", "t", "e", "n", "t", "s"], self.out, True)
+        self.assertEqual(len(self.out), 1)
+        self.assertEqual(self.out.pop().strip(), "ttsonnec")
+
+    def test_sort_sort_contents(self):
+        sort = app.Sort()
+        sort._sort_contents(["c", "o", "n", "t", "e", "n", "t", "s"], self.out)
+        self.assertEqual(len(self.out), 1)
+        self.assertEqual(self.out.pop().strip(), "cennostt")
+
+    def test_sort_read_file_fake_file(self):
+        sort = app.Sort()
+        self.assertRaises(
+            FileNotFoundError,
+            sort._read_file,
+            "unittests/test4.txt",
+        )
+
+    def test_sort_read_file(self):
+        sort = app.Sort()
+        self.assertListEqual(
+            sort._read_file("unittests/test1.txt"),
+            [
+                "abcdef had a dog, then they had a book \n",
+                " When it asdtnnasn it wanted to asjdiansdnainsd it siansdinanis\n",
+            ],
+        )
+
+    def test_sort_input_from_stdin_list(self):
+        sort = app.Sort()
+        self.assertListEqual(
+            sort._input_from_stdin([["AAA"]]),
+            ["AAA"],
+        )
+
+    def test_sort_input_from_stdin_str(self):
+        sort = app.Sort()
+        self.assertListEqual(
+            sort._input_from_stdin(["AAA"]),
+            ["AAA"],
+        )
+
+    def test_sort_input_from_stdin_int(self):
+        sort = app.Sort()
+        self.assertRaises(
+            app.ApplicationExcecutionError,
+            sort._input_from_stdin,
+            [2],
+        )
+
+    def test_sort_no_args(self):
+        sort = app.Sort()
+        self.assertRaises(
+            app.ApplicationExcecutionError, sort.exec, [], self.out, False
+        )
+
+    def test_sort_stdin(self):
+        sort = app.Sort()
+        self.out.append("c\no\nn\nt\ne\nn\nt\ns\n")
+        sort.exec([], self.out, True)
+        self.assertEqual(len(self.out), 1)
+        self.assertEqual(self.out.pop(), "c\ne\nn\nn\no\ns\nt\nt\n")
+
+    def test_sort_multiple_args(self):
+        sort = app.Sort()
+        self.assertRaises(
+            app.ApplicationExcecutionError,
+            sort.exec,
+            ["-", "r", "unittests/test1.txt"],
+            self.out,
+            False,
+        )
+
+    def test_sort_reverse(self):
+        sort = app.Sort()
+        sort.exec(["-r", "unittests/alphabet.txt"], self.out, False)
+        self.assertEqual(len(self.out), 1)
+        self.assertListEqual(
+            self.out.pop().strip().split("\n"),
+            [
+                "z",
+                "y",
+                "x",
+                "w",
+                "v",
+                "u",
+                "t",
+                "s",
+                "r",
+                "q",
+                "p",
+                "o",
+                "n",
+                "m",
+                "l",
+                "k",
+                "j",
+                "i",
+                "h",
+                "g",
+                "f",
+                "e",
+                "d",
+                "c",
+                "b",
+                "a",
+            ],
+        )
+
+    def test_sort(self):
+        sort = app.Sort()
+        sort.exec(["unittests/test1.txt"], self.out, False)
+        self.assertEqual(len(self.out), 1)
+        self.assertListEqual(
+            self.out.pop().strip().split("\n"),
+            [
+                "When it asdtnnasn it wanted to asjdiansdnainsd it siansdinanis",
+                "abcdef had a dog, then they had a book",
+            ],
+        )
+
 
 class TestCommandEvaluator(unittest.TestCase):
     def setUp(self):
