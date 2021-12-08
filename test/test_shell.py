@@ -327,6 +327,110 @@ class TestApplications(unittest.TestCase):
             ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"],
         )
 
+    def test_tail_read_last_n_lines_from_file_fake_file(self):
+        tail = app.Tail()
+        self.assertRaises(
+            FileNotFoundError,
+            tail._read_last_n_lines_from_file,
+            "unittests/test4.txt",
+            10,
+            self.out,
+        )
+
+    def test_tail_read_last_n_lines_from_file_n_is_zero(self):
+        tail = app.Tail()
+        tail._read_last_n_lines_from_file("unittests/alphabet.txt", 0, self.out)
+        self.assertEqual(len(self.out), 1)
+        self.assertEqual(self.out.pop().strip(), "")
+
+    def test_tail_read_last_n_lines_from_file_n_is_negative(self):
+        tail = app.Tail()
+        tail._read_last_n_lines_from_file("unittests/alphabet.txt", -2, self.out)
+        self.assertEqual(len(self.out), 1)
+        self.assertEqual(self.out.pop().strip(), "")
+
+    def test_tail_read_last_n_lines_from_file(self):
+        tail = app.Tail()
+        tail._read_last_n_lines_from_file("unittests/alphabet.txt", 5, self.out)
+        self.assertEqual(len(self.out), 1)
+        self.assertListEqual(
+            self.out.pop().split(),
+            ["v", "w", "x", "y", "z"],
+        )
+
+    def test_tail_no_args(self):
+        tail = app.Tail()
+        self.assertRaises(
+            app.ApplicationExcecutionError, tail.exec, [], self.out, False
+        )
+
+    def test_tail_stdin(self):
+        self.out.append("unittests/alphabet.txt")
+        tail = app.Tail()
+        tail.exec([], self.out, True)
+        self.assertEqual(len(self.out), 1)
+        self.assertListEqual(
+            self.out.pop().split(),
+            ["q", "r", "s", "t", "u", "v", "w", "x", "y", "z"],
+        )
+
+    def test_tail_two_args(self):
+        tail = app.Tail()
+        self.assertRaises(
+            app.ApplicationExcecutionError,
+            tail.exec,
+            ["15", "unittests/alphabet.txt"],
+            self.out,
+            False,
+        )
+
+    def test_tail_wrong_flag(self):
+        tail = app.Tail()
+        self.assertRaises(
+            app.ApplicationExcecutionError,
+            tail.exec,
+            ["-number", "5", "unittests/alphabet.txt"],
+            self.out,
+            False,
+        )
+
+    def test_tail_n_flag_string(self):
+        tail = app.Tail()
+        self.assertRaises(
+            app.ApplicationExcecutionError,
+            tail.exec,
+            ["-n", "five", "unittests/alphabet.txt"],
+            self.out,
+            False,
+        )
+
+    def test_tail_n_flag_over_limit(self):
+        tail = app.Tail()
+        tail.exec(["-n", "30", "unittests/alphabet.txt"], self.out, False)
+        self.assertEqual(len(self.out), 1)
+        self.assertListEqual(
+            self.out.pop().split(),
+            "a\nb\nc\nd\ne\nf\ng\nh\ni\nj\nk\nl\nm\nn\no\np\nq\nr\ns\nt\nu\nv\nw\nx\ny\nz".split(),
+        )
+
+    def test_tail_n_flag(self):
+        tail = app.Tail()
+        tail.exec(["-n", "4", "unittests/alphabet.txt"], self.out, False)
+        self.assertEqual(len(self.out), 1)
+        self.assertListEqual(
+            self.out.pop().split(),
+            ["w", "x", "y", "z"],
+        )
+
+    def test_tail(self):
+        tail = app.Tail()
+        tail.exec(["unittests/alphabet.txt"], self.out, False)
+        self.assertEqual(len(self.out), 1)
+        self.assertListEqual(
+            self.out.pop().split(),
+            ["q", "r", "s", "t", "u", "v", "w", "x", "y", "z"],
+        )
+
 
 class TestCommandEvaluator(unittest.TestCase):
     def setUp(self):
