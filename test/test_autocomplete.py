@@ -43,7 +43,7 @@ class TestCommandEvaluator(unittest.TestCase):
         current_opts = self.completer.options
         self.completer.set_options(["cd", "clear", "cat"])
         new_opts = self.completer.options
-        self.assertListEqual(current_opts, new_opts)
+        self.assertNotEqual(current_opts, new_opts)
         self.assertCountEqual(new_opts, ["cd", "clear", "cat"])
     
 
