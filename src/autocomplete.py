@@ -75,7 +75,7 @@ class Completer():  # Custom completer
         self.set_options_to_files_and_folders(ls_dir)
         res = self.completes(text, state)
         # If autocomplete text is path add a '/' to distinguish
-        if path.isdir(ls_dir + '/' + res + '/'):
+        if res != None and path.isdir(ls_dir + '/' + res + '/'):
             return res + '/'
         return res
 
