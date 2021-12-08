@@ -66,7 +66,9 @@ class Completer():  # Custom completer
     def autocomplete_flag(self, current_text, text, state):
         params = APPLICATIONS.get(current_text[-2])
         self.options = [params]
-        return self.completes(text, state)[1:]
+        res = self.completes(text, state)
+        if res:
+            return res[1:]
 
     def autocomplete_files_and_folders(self, current_text, text, state):
         ls_dir = getcwd()
@@ -79,13 +81,14 @@ class Completer():  # Custom completer
             return res + '/'
         return res
 
-    def check(self, text, state):
+    def check(self, text, state, current=None):
         """
         Main function to check what the type of the current text is
         in the order: application, flag, directory.
         Then returns filtered result and prints to terminal
         """
-        current = readline.get_line_buffer()
+        
+        if current == None: current = readline.get_line_buffer()
         current_text = current.split(" ")
         if len(current_text) == 1 or current_text[-2] in ['|', ';', '`']:
             return self.autocomplete_application(text, state)
