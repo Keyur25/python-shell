@@ -52,6 +52,18 @@ class TestCommandEvaluator(unittest.TestCase):
 
         self.completer.set_options_to_files_and_folders("unittests/dir1/")
         self.assertCountEqual(self.completer.options, ["hello.txt", "random.txt"])
+    
+    def test_autocomplete_application(self):
+        apps = APPLICATIONS.keys()
+        text = "c"
+        i = 0
+        res = []
+        for app in apps:
+            if app.startswith(text):
+                res.append(self.completer.autocomplete_application(text, i))
+                i += 1
+        res.append(self.completer.autocomplete_application(text, i+1))
+        self.assertCountEqual(res, ["cd", "cat", "clear", "cut", None])
 
 if __name__ == "__main__":
     unittest.main()
