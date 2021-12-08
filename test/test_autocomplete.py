@@ -65,5 +65,19 @@ class TestCommandEvaluator(unittest.TestCase):
         res.append(self.completer.autocomplete_application(text, i+1))
         self.assertCountEqual(res, ["cd", "cat", "clear", "cut", None])
 
+    def test_autocomplete_flag(self):
+        text = "head -"
+        text_split = text.split(' ')
+        apps = APPLICATIONS.keys()
+        for app in apps:
+            if APPLICATIONS.get(app) != "" and text_split[0] == app:
+                res = self.completer.autocomplete_flag(text_split, "", 0)
+                break
+        self.assertEqual(res, 'n')
+        
+
+    
+
+
 if __name__ == "__main__":
     unittest.main()
