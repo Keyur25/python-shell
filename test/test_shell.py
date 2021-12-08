@@ -552,6 +552,16 @@ class TestApplications(unittest.TestCase):
             [2],
         )
 
+    def test_sort_reverse_options_no_args(self):
+        sort = app.Sort()
+        self.assertRaises(
+            app.ApplicationExcecutionError,
+            sort._reverse_options,
+            [],
+            self.out,
+            0,
+        )
+
     def test_sort_no_args(self):
         sort = app.Sort()
         self.assertRaises(
@@ -564,6 +574,14 @@ class TestApplications(unittest.TestCase):
         sort.exec([], self.out, True)
         self.assertEqual(len(self.out), 1)
         self.assertEqual(self.out.pop(), "c\ne\nn\nn\no\ns\nt\nt\n")
+
+    def test_sort_stdin_reverse(self):
+        pass
+        sort = app.Sort()
+        self.out.append("c\no\nn\nt\ne\nn\nt\ns\n")
+        sort.exec(["-r"], self.out, True)
+        self.assertEqual(len(self.out), 1)
+        self.assertEqual(self.out.pop(), "t\nt\ns\no\nn\nn\ne\nc\n")
 
     def test_sort_multiple_args(self):
         sort = app.Sort()
