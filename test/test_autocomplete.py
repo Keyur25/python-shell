@@ -22,11 +22,12 @@ class TestCommandEvaluator(unittest.TestCase):
         filesystem_setup = ";".join(
             [
                 "cd unittests",
-                "echo 'abcdef had a dog, then they had a book \n When it asdtnnasn it wanted to asjdiansdnainsd it siansdinanis' > test1.txt",
-                "echo BBB > test2.txt",
-                "echo CCC > test3.txt",
                 "mkdir dir1",
+                "mkdir dir2",
                 "echo 'HELLO THERE' > dir1/hello.txt",
+                "echo 'random' > dir1/random.txt",
+                "echo CCC > outer.txt",
+                "echo SOMETHING > outer2.txt"
             ]
         )
         self.prepare(filesystem_setup)
@@ -38,7 +39,6 @@ class TestCommandEvaluator(unittest.TestCase):
             print("error: failed to remove unittests directory")
             exit(1)
         
-    
     def test_set_options(self):
         current_opts = self.completer.options
         self.completer.set_options(["cd", "clear", "cat"])
@@ -46,7 +46,12 @@ class TestCommandEvaluator(unittest.TestCase):
         self.assertNotEqual(current_opts, new_opts)
         self.assertCountEqual(new_opts, ["cd", "clear", "cat"])
     
+    def test_options_to_files_and_folders(self):
+        self.completer.set_options_to_files_and_folders("unittests/")
+        self.assertCountEqual(self.completer.options, ["dir1", "dir2", "outer.txt", "outer2.txt"])
 
+        self.completer.set_options_to_files_and_folders("unittests/dir1/")
+        self.assertCountEqual(self.completer.options, ["hello.txt", "random.txt"])
 
 if __name__ == "__main__":
     unittest.main()
