@@ -194,7 +194,6 @@ class Cut(Application):
     """
 
     def _get_section(self, no_of_bytes_param, line):
-        
         """
         Returns the extracted section from given line.
         """
@@ -230,10 +229,10 @@ class Cut(Application):
         for line in lines:
             result += self._get_section(no_of_bytes_param, line.strip()) + "\n"
         return result[:-1]
-
+    
     def exec(self, args, out, in_pipe):
         no_of_bytes_param = args[1].split(",")
-        no_of_bytes_param.sort()
+        no_of_bytes_param.sort(key=lambda x : int(x.split('-')[0]) if x.split('-')[0] != '' else -ord(x[0]))
         if len(args) == 2:
             if not in_pipe:
                 raise ApplicationExcecutionError("Invalid Arguments")
