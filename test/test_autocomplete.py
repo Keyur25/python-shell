@@ -1,5 +1,7 @@
 import unittest
 import subprocess
+from io import StringIO
+import sys
 from autocomplete import APPLICATIONS, Completer
 
 
@@ -107,6 +109,58 @@ class TestCommandEvaluator(unittest.TestCase):
             res.append(self.completer.autocomplete_files_and_folders(text_split, "", i))
         self.assertCountEqual(res, ["hello.txt", "random.txt", None])
     
+    def test_check_app(self):
+        cmd = "c"
+        if cmd[-1] == '/':
+            text = ""
+        else:
+            text = cmd.split(" ")[-1].split("/")[-1]
+        res = []
+        for i in range(0, 5):
+            res.append(self.completer.check(text, i, cmd))
+        self.assertCountEqual(res, ["cd", "cat", "clear", "cut", None])
+    
+    def test_check_app_flag(self):
+        cmd = "head -"
+        if cmd[-1] == '/':
+            text = ""
+        else:
+            text = cmd.split(" ")[-1].split("/")[-1]
+        res = []
+        for i in range(0, 2):
+            res.append(self.completer.check(text, i, cmd))
+        self.assertCountEqual(res, ["n", None])
+
+    def test_check_file(self):
+        cmd = "cd unittests/dir1/"
+        if cmd[-1] == '/':
+            text = ""
+        else:
+            text = cmd.split(" ")[-1].split("/")[-1]
+        res = []
+        for i in range(0, 3):
+            res.append(self.completer.check(text, i, cmd))
+        self.assertCountEqual(res, ["hello.txt", "random.txt", None])
+    
+    def test_check_folder(self):
+        cmd = "cd unittests/dir"
+        if cmd[-1] == '/':
+            text = ""
+        else:
+            text = cmd.split(" ")[-1].split("/")[-1]
+        res = []
+        for i in range(0, 3):
+            res.append(self.completer.check(text, i, cmd))
+        self.assertCountEqual(res, ["dir1/", "dir2/", None])
+        
+        
+        
+        
+
+            
+        
+        
+        
         
 
     
