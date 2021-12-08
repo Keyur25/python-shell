@@ -48,17 +48,6 @@ class Completer():  # Custom completer
         except IndexError:
             return None
 
-    def autocomplete_subdir(self, current_text, ls_dir):
-        """
-        Returns the current directory and subdir text that has
-        not been entered yet.
-        E.G. cd src/grammars/[TAB] -> Returns "src/grammars/"
-        """
-        if current_text[-1][-1] == '/':
-            ls_dir += '/' + current_text[-1]
-        else:
-            ls_dir += '/' + current_text[-1][:current_text[-1].rindex('/')]
-
     def set_options_to_files_and_folders(self, ls_dir):
         """
         Sets the options to all the files and folders
@@ -82,7 +71,7 @@ class Completer():  # Custom completer
     def autocomplete_files_and_folders(self, current_text, text, state):
         ls_dir = getcwd()
         if '/' in current_text[-1]:
-            self.autocomplete_subdir(current_text, ls_dir)
+            ls_dir += "/" + current_text[-1][:current_text[-1].rindex('/')]
         self.set_options_to_files_and_folders(ls_dir)
         res = self.completes(text, state)
         # If autocomplete text is path add a '/' to distinguish
