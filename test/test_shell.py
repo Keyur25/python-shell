@@ -88,6 +88,7 @@ class TestApplications(unittest.TestCase):
                 "echo DDD > dir1/.test3.txt",
                 "mkdir dir2",
                 "echo 'HELLO THERE' > dir1/hello.txt",
+                "echo 'a\nb\nc\nd\ne\nf\ng\nh\ni\nj\nk\nl\nm\nn\no\np\nq\nr\ns\nt\nu\nv\nw\nx\ny\nz' > alphabet.txt",
             ]
         )
         self.prepare(filesystem_setup)
@@ -166,14 +167,15 @@ class TestApplications(unittest.TestCase):
         result = self.out.pop().splitlines()
         result.sort()
         self.assertListEqual(
-            result, ["dir1", "dir2", "test1.txt", "test2.txt", "test3.txt"]
+            result,
+            ["alphabet.txt", "dir1", "dir2", "test1.txt", "test2.txt", "test3.txt"],
         )
 
     def test_cat_no_args(self):
         cat = app.Cat()
         self.assertRaises(app.ApplicationExcecutionError, cat.exec, [], self.out, False)
 
-    def test_cat_no_args_in_pipe(self):
+    def test_cat_stdin(self):
         self.out.append("unittests/test2.txt")
         print("unittests/test2.txt".strip())
         cat = app.Cat()
@@ -220,6 +222,110 @@ class TestApplications(unittest.TestCase):
         echo.exec(["foo bar"], self.out, False)
         self.assertEqual(len(self.out), 1)
         self.assertEqual(self.out.pop().strip(), "foo bar")
+
+    def test_head_read_first_n_lines_from_file_fake_file(self):
+        head = app.Head()
+        self.assertRaises(
+            FileNotFoundError,
+            head._read_first_n_lines_from_file,
+            "unittests/test4.txt",
+            10,
+            self.out,
+        )
+
+    def test_head_read_first_n_lines_from_file_n_is_zero(self):
+        head = app.Head()
+        head._read_first_n_lines_from_file("unittests/alphabet.txt", 0, self.out)
+        self.assertEqual(len(self.out), 1)
+        self.assertEqual(self.out.pop().strip(), "")
+
+    def test_head_read_first_n_lines_from_file_n_is_negative(self):
+        head = app.Head()
+        head._read_first_n_lines_from_file("unittests/alphabet.txt", -2, self.out)
+        self.assertEqual(len(self.out), 1)
+        self.assertEqual(self.out.pop().strip(), "")
+
+    def test_head_read_first_n_lines_from_file(self):
+        head = app.Head()
+        head._read_first_n_lines_from_file("unittests/alphabet.txt", 5, self.out)
+        self.assertEqual(len(self.out), 1)
+        self.assertListEqual(
+            self.out.pop().split(),
+            ["a", "b", "c", "d", "e"],
+        )
+
+    def test_head_no_args(self):
+        head = app.Head()
+        self.assertRaises(
+            app.ApplicationExcecutionError, head.exec, [], self.out, False
+        )
+
+    def test_head_stdin(self):
+        self.out.append("unittests/alphabet.txt")
+        head = app.Head()
+        head.exec([], self.out, True)
+        self.assertEqual(len(self.out), 1)
+        self.assertListEqual(
+            self.out.pop().split(),
+            ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"],
+        )
+
+    def test_head_two_args(self):
+        head = app.Head()
+        self.assertRaises(
+            app.ApplicationExcecutionError,
+            head.exec,
+            ["15", "unittests/alphabet.txt"],
+            self.out,
+            False,
+        )
+
+    def test_head_wrong_flag(self):
+        head = app.Head()
+        self.assertRaises(
+            app.ApplicationExcecutionError,
+            head.exec,
+            ["-number", "5", "unittests/alphabet.txt"],
+            self.out,
+            False,
+        )
+
+    def test_head_n_flag_string(self):
+        head = app.Head()
+        self.assertRaises(
+            app.ApplicationExcecutionError,
+            head.exec,
+            ["-n", "five", "unittests/alphabet.txt"],
+            self.out,
+            False,
+        )
+
+    def test_head_n_flag_over_limit(self):
+        head = app.Head()
+        head.exec(["-n", "30", "unittests/alphabet.txt"], self.out, False)
+        self.assertEqual(len(self.out), 1)
+        self.assertListEqual(
+            self.out.pop().split(),
+            "a\nb\nc\nd\ne\nf\ng\nh\ni\nj\nk\nl\nm\nn\no\np\nq\nr\ns\nt\nu\nv\nw\nx\ny\nz".split(),
+        )
+
+    def test_head_n_flag(self):
+        head = app.Head()
+        head.exec(["-n", "4", "unittests/alphabet.txt"], self.out, False)
+        self.assertEqual(len(self.out), 1)
+        self.assertListEqual(
+            self.out.pop().split(),
+            ["a", "b", "c", "d"],
+        )
+
+    def test_head(self):
+        head = app.Head()
+        head.exec(["unittests/alphabet.txt"], self.out, False)
+        self.assertEqual(len(self.out), 1)
+        self.assertListEqual(
+            self.out.pop().split(),
+            ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"],
+        )
 
 
 class TestCommandEvaluator(unittest.TestCase):

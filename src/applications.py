@@ -98,7 +98,12 @@ class Head(Application):
             self._read_first_n_lines_from_file(out.pop(), 10, out)
         elif no_of_args == 1:  # default case
             self._read_first_n_lines_from_file(args[0], 10, out)
-        elif no_of_args == 3 and args[0] == "-n" and args[1].isnumeric():
+        elif (
+            no_of_args == 3
+            and args[0] == "-n"
+            and args[1].isnumeric()
+            and int(args[1]) >= 0
+        ):
             self._read_first_n_lines_from_file(args[2], int(args[1]), out)
         else:
             raise ApplicationExcecutionError("Invalid Arguments")
