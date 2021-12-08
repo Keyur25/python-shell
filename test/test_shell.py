@@ -2,6 +2,7 @@ import subprocess
 import unittest
 from collections import deque
 import os
+import re
 
 # from hypothesis import example, given, strategies as st
 # export PYTHONPATH="./src"
@@ -430,6 +431,69 @@ class TestApplications(unittest.TestCase):
             self.out.pop().split(),
             ["q", "r", "s", "t", "u", "v", "w", "x", "y", "z"],
         )
+
+    def test_find_get_path_and_pattern_no_args(self):
+        find = app.Find()
+        self.assertRaises(
+            app.ApplicationExcecutionError,
+            find._get_path_and_pattern,
+            [],
+        )
+
+    def test_find_get_path_and_pattern_two_args_no_name(self):
+        find = app.Find()
+        self.assertRaises(
+            app.ApplicationExcecutionError,
+            find._get_path_and_pattern,
+            ["-n", "pattern"],
+        )
+
+    def test_find_get_path_and_pattern_three_args_no_name(self):
+        find = app.Find()
+        self.assertRaises(
+            app.ApplicationExcecutionError,
+            find._get_path_and_pattern,
+            ["path", "-n", "pattern"],
+        )
+
+    def test_find_get_path_and_pattern_two_args(self):
+        find = app.Find()
+        path, pattern = find._get_path_and_pattern(["-name", "pattern"])
+        self.assertEqual(path, "./")
+        self.assertEqual(pattern, "pattern")
+
+    def test_find_get_path_and_pattern_three_args(self):
+        find = app.Find()
+        path, pattern = find._get_path_and_pattern(["path", "-name", "pattern"])
+        self.assertEqual(path, "path")
+        self.assertEqual(pattern, "pattern")
+
+    def test_find_no_matches(self):
+        find = app.Find()
+        find.exec(["unittests", "-name", "test4.txt"], self.out, False)
+        result = set(re.split("\n|\t", self.out.pop().strip()))
+        self.assertEqual(result, {""})
+
+    def test_find_asterisk(self):
+        find = app.Find()
+        find.exec(["unittests", "-name", "*.txt"], self.out, False)
+        result = set(re.split("\n|\t", self.out.pop().strip()))
+        self.assertEqual(
+            result,
+            {
+                "unittests/test2.txt",
+                "unittests/test3.txt",
+                "unittests/test1.txt",
+                "unittests/alphabet.txt",
+                "unittests/dir1/hello.txt",
+            },
+        )
+
+    def test_find(self):
+        find = app.Find()
+        find.exec(["unittests", "-name", "hello.txt"], self.out, False)
+        result = set(re.split("\n|\t", self.out.pop().strip()))
+        self.assertEqual(result, {"unittests/dir1/hello.txt"})
 
     def test_sort_sort_contents_empty_contents(self):
         sort = app.Sort()
