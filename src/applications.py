@@ -194,25 +194,27 @@ class Cut(Application):
     """
 
     def _get_section(self, no_of_bytes_param, line):
+        
         """
         Returns the extracted section from given line.
         """
         result = ""
         for param in no_of_bytes_param:
-            if len(param) == 1 and int(param) <= len(
+            param_section = [p for p in re.split("(-)", param) if p != '']
+            if len(param_section) == 1 and int(param_section[0]) <= len(
                 line
             ):  # Single byte arg. e.g. -b n
-                result += self._single_param(line, param)
-            elif len(param) == 2:
+                result += self._single_param(line, param_section[0])
+            elif len(param_section) == 2:
                 # -b -n (from first byte to nth byte) or -b n- (from nth byte to last byte)
-                if param[0] == "-":  # Case -b -n
-                    result += line[: int(param[1])]
-                elif param[1] == "-":  # Case -b n-
-                    result += str(line[int(param[0]) - 1 :])
+                if param_section[0] == "-":  # Case -b -n
+                    result += line[: int(param_section[1])]
+                elif param_section[1] == "-":  # Case -b n-
+                    result += str(line[int(param_section[0]) - 1 :])
                     break
-            elif len(param) == 3:
+            elif len(param_section) == 3 and param_section[1] == "-":
                 # -b n-m (from nth byte to mth byte)
-                result += line[int(param[0]) - 1 : int(param[2])]
+                result += line[int(param_section[0]) - 1 : int(param_section[2])]
         return result
 
     def _single_param(self, line, param):
