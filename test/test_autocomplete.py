@@ -74,6 +74,39 @@ class TestCommandEvaluator(unittest.TestCase):
                 res = self.completer.autocomplete_flag(text_split, "", 0)
                 break
         self.assertEqual(res, 'n')
+    
+    def test_autocomplete_folder(self):
+        text = "cd unit"
+        text_split = text.split(' ')
+        res = []
+        for i in range(0, 2):
+            res.append(self.completer.autocomplete_files_and_folders(text_split, text_split[-1], i))
+        self.assertCountEqual(res, ["unittests/", None])
+
+    def test_autocomplete_folder_duplicate(self):
+        text = "cd unittests/dir"
+        text_split = text.split(' ')
+        res = []
+        for i in range(0, 3):
+            res.append(self.completer.autocomplete_files_and_folders(text_split, "dir", i))
+        self.assertCountEqual(res, ["dir1/", "dir2/", None])
+
+    def test_autocomplete_file(self):
+        text = "cd unittests/dir1/h"
+        text_split = text.split(' ')
+        res = []
+        for i in range(0, 2):
+            res.append(self.completer.autocomplete_files_and_folders(text_split, "h", i))
+        self.assertCountEqual(res, ["hello.txt", None])
+
+    def test_autocomplete_file_duplicate(self):
+        text = "cd unittests/dir1/"
+        text_split = text.split(' ')
+        res = []
+        for i in range(0, 3):
+            res.append(self.completer.autocomplete_files_and_folders(text_split, "", i))
+        self.assertCountEqual(res, ["hello.txt", "random.txt", None])
+    
         
 
     
