@@ -430,6 +430,119 @@ class TestApplications(unittest.TestCase):
             self.out.pop().split(),
             ["q", "r", "s", "t", "u", "v", "w", "x", "y", "z"],
         )
+    
+    """testing grep"""
+
+    def test_grep_find_matches_from_stdin_with_match_all(self):
+        grep = app.Grep()
+        pattern = "..."
+        lines = ["AAA", "BBB", "CCC"]
+        grep._find_matches_from_stdin(pattern, lines, self.out)
+
+        self.assertEqual(len(self.out), 1)
+        self.assertEqual(self.out.pop(), "AAA\nBBB\nCCC")
+    
+    def test_grep_find_matches_from_stdin_with_partial_match(self):
+        grep = app.Grep()
+        pattern = "A.."
+        lines = ["AAA", "BBB", "CCC"]
+        grep._find_matches_from_stdin(pattern, lines, self.out)
+
+        self.assertEqual(len(self.out), 1)
+        self.assertEqual(self.out.pop(), "AAA")
+    
+    def test_grep_find_matches_from_stdin_with_no_match(self):
+        grep = app.Grep()
+        pattern = "D.."
+        lines = ["AAA", "BBB", "CCC"]
+        grep._find_matches_from_stdin(pattern, lines, self.out)
+
+        self.assertEqual(len(self.out), 1)
+        self.assertEqual(self.out.pop(), "")
+    
+    def test__grep_with_match_all(self):
+        grep = app.Grep()
+        pattern = "..."
+        multiple_files = False
+        contents = []
+        file = "test.txt"
+        lines = ["AAA", "BBB", "CCC"]
+        grep._grep(pattern, multiple_files, contents, file, lines)
+        self.assertListEqual(contents, ["AAA", "BBB", "CCC"])
+    
+    def test__grep_with_partial_match(self):
+        grep = app.Grep()
+        pattern = "A.."
+        multiple_files = False
+        contents = []
+        file = "test.txt"
+        lines = ["AAA", "ABB", "CCC"]
+        grep._grep(pattern, multiple_files, contents, file, lines)
+        self.assertListEqual(contents, ["AAA", "ABB"])
+    
+    def test__grep_with_no_match(self):
+        grep = app.Grep()
+        pattern = "D.."
+        multiple_files = False
+        contents = []
+        file = "test.txt"
+        lines = ["AAA", "ABB", "CCC"]
+        grep._grep(pattern, multiple_files, contents, file, lines)
+        self.assertEqual(contents, [])
+    
+    def test__grep_with_multiple_files_set_to_true(self):
+        grep = app.Grep()
+        pattern = "A.."
+        multiple_files = True
+        contents = []
+        file = "test.txt"
+        lines = ["AAA", "ABB", "CCC"]
+        grep._grep(pattern, multiple_files, contents, file, lines)
+        self.assertListEqual(contents, ["test.txt:AAA", "test.txt:ABB"])
+    
+    def test_find_matches_from_files_with_one_file(self):
+        grep = app.Grep()
+        pattern = "BBB"
+        files = ["unittests/test2.txt"]
+        grep._find_matches_from_files(pattern, files, self.out)
+        self.assertEqual(len(self.out), 1)
+        self.assertEqual(self.out.pop(), "BBB")
+    
+    def test_find_matches_from_files_with_multiple_files(self):
+        grep = app.Grep()
+        pattern = "..."
+        files = ["unittests/test2.txt", "unittests/test3.txt"]
+        grep._find_matches_from_files(pattern, files, self.out)
+        self.assertEqual(len(self.out), 1)
+        self.assertListEqual(self.out.pop().split("\n"), ["unittests/test2.txt:BBB", "unittests/test3.txt:CCC"])
+    
+    def test_grep_with_no_arguments(self):
+        grep = app.Grep()
+        args = []
+        self.assertRaises(app.ApplicationExcecutionError, grep.exec, args, self.out, False)
+    
+    def test_grep_with_one_argument_and_in_pipe_set_to_false(self):
+        grep = app.Grep()
+        args = ["foo"]
+        in_pipe = False
+        self.assertRaises(app.ApplicationExcecutionError, grep.exec, args, self.out, in_pipe)
+
+    def test_grep_in_pipe(self):
+        grep = app.Grep()
+        self.out.append("AAA") # simulate a prev. commands output in pipe
+        args = ["..."]
+        in_pipe = True
+        grep.exec(args, self.out, in_pipe)
+        self.assertEqual(len(self.out), 1)
+        self.assertEqual(self.out.pop(), "AAA")
+
+    def test_grep(self):
+        grep = app.Grep()
+        args = ["B..", "unittests/test2.txt", "unittests/test3.txt"]
+        in_pipe = False
+        grep.exec(args, self.out, in_pipe)
+        self.assertEqual(len(self.out), 1)
+        self.assertListEqual(self.out.pop().split("\n"), ["unittests/test2.txt:BBB"])
 
 
 class TestCommandEvaluator(unittest.TestCase):
