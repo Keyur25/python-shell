@@ -4,6 +4,7 @@ import unittest
 import subprocess
 import applications as app
 from collections import deque
+from commands import Call
 
 
 class TestPwd(unittest.TestCase):
@@ -196,7 +197,6 @@ class TestCat(unittest.TestCase):
 
     def test_cat_stdin(self):
         self.out.append("unittests/test2.txt")
-        print("unittests/test2.txt".strip())
         cat = app.Cat()
         cat.exec([], self.out, True)
         self.assertEqual(len(self.out), 1)
@@ -1157,3 +1157,65 @@ class TestSort(unittest.TestCase):
                 "abcdef had a dog, then they had a book",
             ],
         )
+
+class TestUnsafeDecorator(unittest.TestCase):
+
+    def setUp(self):
+        self.out = deque()
+
+    def test_key_error(self):
+        call = Call("_foo bar")
+        call.application = "_foo"
+        call.args = ["bar"]
+        app.execute_application(call, self.out, False)
+        self.assertEqual(len(self.out), 1)
+        self.assertEqual(self.out.pop().strip(), "Unsupported Application: foo")
+
+    def test_os_error(self):
+        cat = app.UnsafeDecorator(app.application_factory("cat"), Call("cat foo.txt"))
+        cat.exec(["foo.txt"], self.out, False)
+        self.assertEqual(len(self.out), 1)
+        self.assertEqual(self.out.pop().strip(), "OS Error: cat foo.txt")
+
+    def test_application_error(self):
+        pwd = app.UnsafeDecorator(app.application_factory("pwd"), Call("pwd foo"))
+        pwd.exec(["foo"], self.out, False)
+        self.assertEqual(len(self.out), 1)
+        self.assertEqual(self.out.pop().strip(), "Pwd Takes No Arguments: pwd foo")
+    
+    def test_index_error(self):
+        cat = app.UnsafeDecorator(app.application_factory("cat"), Call("_cat"))
+        cat.exec([], self.out, True)
+
+        self.assertEqual(len(self.out), 1)
+        self.assertEqual(self.out.pop().strip(), "Index Error: _cat")
+    
+
+class TestFileOutput(unittest.TestCase):
+
+    def setUp(self):
+        p = subprocess.run(["mkdir", "unittests"], stdout=subprocess.DEVNULL)
+        if p.returncode != 0:
+            print("error: failed to create unittest directory")
+            exit(1)
+        self.out = deque()
+
+    def test_file_output(self):
+        out = deque()
+        call = Call("echo foo > unittests/bar.txt")
+        call.application = "echo"
+        call.args = ["foo"]
+        call.file_output = "unittests/bar.txt"
+
+        app.execute_application(call, out, False)
+
+        with open("unittests/bar.txt") as f:
+            lines = f.readlines()
+        
+        self.assertEqual(lines, ["foo\n"])
+
+    def tearDown(self):
+        p = subprocess.run(["rm", "-r", "unittests"], stdout=subprocess.DEVNULL)
+        if p.returncode != 0:
+            print("error: failed to remove unittests directory")
+            exit(1)

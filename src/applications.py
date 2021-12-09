@@ -411,13 +411,12 @@ class UnsafeDecorator:
     def exec(self, args, out, in_pipe):
         try:
             self.application.exec(args, out, in_pipe)
-        except KeyError:
-            out.append(f"Unsupported Application: {self.call.raw_command}\n")
         except OSError:
             out.append(f"OS Error: {self.call.raw_command}\n")
         except ApplicationExcecutionError as e:
             out.append(f"{e.message}: {self.call.raw_command}\n")
-        # except IndexError
+        except IndexError:
+            out.append(f"Index Error: {self.call.raw_command}\n")
 
 
 def save_result_to_file(file_name, result):
@@ -450,7 +449,12 @@ def execute_application(call, out, in_pipe):
     app = call.application
     args = call.args
     if app[0] == "_":
-        application = UnsafeDecorator(application_factory(app[1:]), call)
+        try:
+            app = application_factory(app[1:])
+        except KeyError:
+            out.append(f"Unsupported Application: {app[1:]}\n")
+            return
+        application = UnsafeDecorator(app, call)
     else:
         application = application_factory(app)
     application.exec(args, out, in_pipe)
