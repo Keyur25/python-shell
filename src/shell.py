@@ -13,7 +13,7 @@ def eval(cmdline, out):
     parser = Parser()
     command_tree = parser.command_level_parse(cmdline)
     if not command_tree:
-        out.append(f"Unrecognized Input: {cmdline}")
+        out.append(f"Unrecognized Input: {cmdline}\n")
         return
     raw_commands = extract_raw_commands(command_tree)
     seq = Seq(raw_commands)

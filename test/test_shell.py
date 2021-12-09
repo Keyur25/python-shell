@@ -56,15 +56,18 @@ class TestShell(unittest.TestCase):
         if p.returncode != 0:
             print("error: failed to remove unittests directory")
             exit(1)
+    
+    def test_eval(self):
+        out = deque()
+        shell_evaluator("echo foo", out)
+        self.assertEqual(out.popleft(), "foo\n")
+        self.assertEqual(len(out), 0)
 
-    def _eval_cmd(self, cmd):
-        shell_evaluator("pwd", self.out)
-        start_dir = self.out.pop()
-        shell_evaluator("cd unittests", self.out)
-        shell_evaluator(cmd, self.out)
-        shell_result = self.out.pop()
-        shell_evaluator(f"cd {start_dir}", self.out)
-        return shell_result
+    def test_eval_with_unrecognised_command(self):
+        out = deque()
+        shell_evaluator("echo '''", out)
+        self.assertEqual(out.popleft(), "Unrecognized Input: echo '''")
+        self.assertEqual(len(out), 0)
 
       
       
