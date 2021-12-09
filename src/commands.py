@@ -2,23 +2,12 @@ from parser import Parser
 from call_evaluator import CommandSubstituitionVisitor
 from call_evaluator import CallTreeVisitor
 from applications import execute_application
+from command_interface import Command
 
-from abc import ABCMeta, abstractmethod
-from typing import Optional, Deque
-
-class Command(metaclass=ABCMeta):
-    """Abstract class method for Commands Call, Pipe, and Seq"""
-    @classmethod
-    def __subclasshook__(cls, subclass):
-        return hasattr(subclass, "eval") and callable(subclass.exec)
-
-    @abstractmethod
-    def eval(self, out: Deque, in_pipe: Optional[bool] = False) -> None:
-        raise NotImplementedError
 
 class Call(Command):
     def __init__(self, raw_command):
-        self.raw_command = raw_command 
+        self.raw_command = raw_command
 
         self.application = None
         self.args = []
@@ -30,7 +19,7 @@ class Call(Command):
                 out.append(f"Unrecognized Command: {self.raw_command}")
             return False
         return True
-    
+
     def _eval_command_subsitution(self, out, call_tree):
         command_substituition_visitor = CommandSubstituitionVisitor(out)
         command_substituition_visitor.visit(call_tree)
@@ -46,7 +35,7 @@ class Call(Command):
         self.application = call_tree_visitor.application
         self.args = call_tree_visitor.args
         self.file_output = call_tree_visitor.file_output
-  
+
     def eval(self, out, in_pipe=False):
         parser = Parser()
         call_tree = parser.call_level_parse(self.raw_command)
@@ -55,13 +44,15 @@ class Call(Command):
         else:
             self._eval_command_subsitution(out, call_tree)
             self._visit_call_tree(call_tree)
-            if(self.application):
+            if self.application:
                 execute_application(self, out, in_pipe)
+
 
 class PipeIterator:
     """
     Allows ordered iteration over all calls in a pipe
     """
+
     def _calls(self, pipe):
         calls = []
         while type(pipe.lhs()) is Pipe:
@@ -91,6 +82,7 @@ class Pipe(Command):
         lhs = pipe | call
         rhs = call
     """
+
     def __init__(self, lhs, rhs):
         self.calls = (lhs, rhs)
 
@@ -116,6 +108,7 @@ class Pipe(Command):
             else:
                 call.eval(out, True)
 
+
 class Seq(Command):
     def __init__(self, commands):
         self.commands = commands
@@ -123,4 +116,3 @@ class Seq(Command):
     def eval(self, out):
         for commands in self.commands:
             commands.eval(out)
-            
