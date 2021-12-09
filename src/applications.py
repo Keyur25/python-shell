@@ -14,6 +14,8 @@ class Pwd(Application):
     def exec(self, args, out, in_pipe):
         if args:
             raise ApplicationExcecutionError("Pwd Takes No Arguments")
+        elif in_pipe:
+            raise ApplicationExcecutionError("Pwd Can Not Take Arguments From stdin")
         out.append(os.getcwd() + "\n")
 
 
@@ -22,7 +24,9 @@ class Cd(Application):
     """change the current working directory to the first argument"""
 
     def exec(self, args, out, in_pipe):
-        if len(args) != 1:
+        if in_pipe:
+            raise ApplicationExcecutionError("Cd Can Not Take Arguments From stdin")
+        elif len(args) != 1:
             raise ApplicationExcecutionError("Invalid Arguments")
         os.chdir(args[0])
 
@@ -40,6 +44,9 @@ class Ls(Application):
             raise ApplicationExcecutionError("Invalid Arguments")
 
     def exec(self, args, out, in_pipe):
+        if in_pipe:
+            raise ApplicationExcecutionError("Ls Can Not Take Arguments From stdin")
+            
         ls_dir = self._get_directory(args)
         contents = []
         for f in listdir(ls_dir):
@@ -69,6 +76,8 @@ class Echo(Application):
     """prints its arguments separated by spaces"""
 
     def exec(self, args, out, in_pipe):
+        if in_pipe:
+            raise ApplicationExcecutionError("Echo Can Not Take Arguments From stdin")
         out.append(" ".join(args) + "\n")
 
 
@@ -257,6 +266,8 @@ class Find(Application):
             raise ApplicationExcecutionError("Invalid Arguments")
 
     def exec(self, args, out, in_pipe):
+        if in_pipe:
+            raise ApplicationExcecutionError("Find Can Not Take Arguments From stdin")
         path, pattern = self._get_path_and_pattern(args)
         file_names = "\n".join(glob.iglob(path + "/**/" + pattern, recursive=True))
         out.append(file_names)
@@ -384,6 +395,8 @@ class Clear(Application):
     """brings the command line to the top of the shell"""
 
     def exec(self, args, out, in_pipe):
+        if in_pipe:
+            raise ApplicationExcecutionError("Clear can not take arguments from stdin")
         # Windows users -> cls
         # Mac/Linux users -> clear
         os.system("cls||clear")
@@ -394,6 +407,8 @@ class Exit(Application):
     """quits the shell"""
 
     def exec(self, args, out, in_pipe):
+        if in_pipe:
+            raise ApplicationExcecutionError("Exit can not take arguments from stdin")
         sys.exit(0)
 
 
