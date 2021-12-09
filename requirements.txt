@@ -4,3 +4,4 @@ flake8-html
 junit2html
 lark==0.11.3
 hypothesis
+mutmut
