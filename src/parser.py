@@ -21,11 +21,11 @@ class Parser:
     def command_level_parse(self, input):
         try:
             return self.command_level_parser.parse(input)
-        except UnexpectedCharacters and UnexpectedEOF:
+        except (UnexpectedCharacters, UnexpectedEOF):
             return False
 
     def call_level_parse(self, input):
         try:
             return self.call_command_parser.parse(input)
-        except UnexpectedCharacters and UnexpectedEOF:
+        except (UnexpectedCharacters, UnexpectedEOF):
             return False

@@ -48,17 +48,6 @@ class Completer():  # Custom completer
         except IndexError:
             return None
 
-    def autocomplete_subdir(self, current_text, ls_dir):
-        """
-        Returns the current directory and subdir text that has
-        not been entered yet.
-        E.G. cd src/grammars/[TAB] -> Returns "src/grammars/"
-        """
-        if current_text[-1][-1] == '/':
-            ls_dir += '/' + current_text[-1]
-        else:
-            ls_dir += '/' + current_text[-1][:current_text[-1].rindex('/')]
-
     def set_options_to_files_and_folders(self, ls_dir):
         """
         Sets the options to all the files and folders
@@ -77,26 +66,29 @@ class Completer():  # Custom completer
     def autocomplete_flag(self, current_text, text, state):
         params = APPLICATIONS.get(current_text[-2])
         self.options = [params]
-        return self.completes(text, state)[1:]
+        res = self.completes(text, state)
+        if res:
+            return res[1:]
 
     def autocomplete_files_and_folders(self, current_text, text, state):
         ls_dir = getcwd()
         if '/' in current_text[-1]:
-            self.autocomplete_subdir(current_text, ls_dir)
+            ls_dir += "/" + current_text[-1][:current_text[-1].rindex('/')]
         self.set_options_to_files_and_folders(ls_dir)
         res = self.completes(text, state)
         # If autocomplete text is path add a '/' to distinguish
-        if path.isdir(ls_dir + '/' + res + '/'):
+        if res != None and path.isdir(ls_dir + '/' + res + '/'):
             return res + '/'
         return res
 
-    def check(self, text, state):
+    def check(self, text, state, current=None):
         """
         Main function to check what the type of the current text is
         in the order: application, flag, directory.
         Then returns filtered result and prints to terminal
         """
-        current = readline.get_line_buffer()
+        
+        if current == None: current = readline.get_line_buffer()
         current_text = current.split(" ")
         if len(current_text) == 1 or current_text[-2] in ['|', ';', '`']:
             return self.autocomplete_application(text, state)
