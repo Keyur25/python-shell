@@ -6,7 +6,24 @@ import applications as app
 from collections import deque
 
 
-class TestApplications(unittest.TestCase):
+class TestPwd(unittest.TestCase):
+    def setUp(self):
+        self.out = deque()
+
+    def test_pwd_with_args(self):
+        pwd = app.Pwd()
+        self.assertRaises(
+            app.ApplicationExcecutionError, pwd.exec, [""], self.out, False
+        )
+
+    def test_pwd(self):
+        pwd = app.Pwd()
+        pwd.exec([], self.out, False)
+        self.assertEqual(len(self.out), 1)
+        self.assertEqual(self.out.pop().strip(), os.getcwd())
+
+
+class TestCd(unittest.TestCase):
     @classmethod
     def prepare(cls, cmdline):
         args = [
@@ -25,14 +42,8 @@ class TestApplications(unittest.TestCase):
         filesystem_setup = ";".join(
             [
                 "cd unittests",
-                "echo 'abcdef had a dog, then they had a book \n When it asdtnnasn it wanted to asjdiansdnainsd it siansdinanis' > test1.txt",
-                "echo BBB > test2.txt",
-                "echo CCC > test3.txt",
                 "mkdir dir1",
-                "echo DDD > dir1/.test3.txt",
                 "mkdir dir2",
-                "echo 'HELLO\nhello\nhello\nhello\nhello\nHello\nHEllo\nHeLlo\nHeLLo\nhello\nhEllO\nhElLo' > dir1/hello.txt",
-                "echo 'a\nb\nc\nd\ne\nf\ng\nh\ni\nj\nk\nl\nm\nn\no\np\nq\nr\ns\nt\nu\nv\nw\nx\ny\nz' > alphabet.txt",
             ]
         )
         self.prepare(filesystem_setup)
@@ -43,18 +54,6 @@ class TestApplications(unittest.TestCase):
         if p.returncode != 0:
             print("error: failed to remove unittests directory")
             exit(1)
-
-    def test_pwd_with_args(self):
-        pwd = app.Pwd()
-        self.assertRaises(
-            app.ApplicationExcecutionError, pwd.exec, [""], self.out, False
-        )
-
-    def test_pwd(self):
-        pwd = app.Pwd()
-        pwd.exec([], self.out, False)
-        self.assertEqual(len(self.out), 1)
-        self.assertEqual(self.out.pop().strip(), os.getcwd())
 
     def test_cd_no_args(self):
         cd = app.Cd()
@@ -77,6 +76,44 @@ class TestApplications(unittest.TestCase):
         self.assertEqual(len(self.out), 0)
         self.assertEqual(old_file_path + "/unittests", os.getcwd())
         cd.exec([".."], self.out, False)
+
+
+class TestLs(unittest.TestCase):
+    @classmethod
+    def prepare(cls, cmdline):
+        args = [
+            "/bin/bash",
+            "-c",
+            cmdline,
+        ]
+        p = subprocess.run(args, capture_output=True)
+        return p.stdout.decode()
+
+    def setUp(self):
+        p = subprocess.run(["mkdir", "unittests"], stdout=subprocess.DEVNULL)
+        if p.returncode != 0:
+            print("error: failed to create unittest directory")
+            exit(1)
+        filesystem_setup = ";".join(
+            [
+                "cd unittests",
+                "echo 'AAA' > test1.txt",
+                "echo BBB > test2.txt",
+                "echo CCC > test3.txt",
+                "mkdir dir1",
+                "echo DDD > dir1/.test3.txt",
+                "echo 'HELLO' > dir1/hello.txt",
+                "mkdir dir2",
+            ]
+        )
+        self.prepare(filesystem_setup)
+        self.out = deque()
+
+    def tearDown(self):
+        p = subprocess.run(["rm", "-r", "unittests"], stdout=subprocess.DEVNULL)
+        if p.returncode != 0:
+            print("error: failed to remove unittests directory")
+            exit(1)
 
     def test_ls_get_directory_no_args(self):
         ls = app.Ls()
@@ -104,7 +141,7 @@ class TestApplications(unittest.TestCase):
         result.sort()
         self.assertListEqual(result, ["hello.txt"])
 
-    def test_ls_valid_arg(self):
+    def test_ls(self):
         ls = app.Ls()
         ls.exec(["unittests"], self.out, False)
         self.assertEqual(len(self.out), 1)
@@ -112,8 +149,46 @@ class TestApplications(unittest.TestCase):
         result.sort()
         self.assertListEqual(
             result,
-            ["alphabet.txt", "dir1", "dir2", "test1.txt", "test2.txt", "test3.txt"],
+            ["dir1", "dir2", "test1.txt", "test2.txt", "test3.txt"],
         )
+
+
+class TestCat(unittest.TestCase):
+    @classmethod
+    def prepare(cls, cmdline):
+        args = [
+            "/bin/bash",
+            "-c",
+            cmdline,
+        ]
+        p = subprocess.run(args, capture_output=True)
+        return p.stdout.decode()
+
+    def setUp(self):
+        p = subprocess.run(["mkdir", "unittests"], stdout=subprocess.DEVNULL)
+        if p.returncode != 0:
+            print("error: failed to create unittest directory")
+            exit(1)
+        filesystem_setup = ";".join(
+            [
+                "cd unittests",
+                "echo 'AAA' > test1.txt",
+                "echo BBB > test2.txt",
+                "echo CCC > test3.txt",
+                "mkdir dir1",
+                "echo DDD > dir1/.test3.txt",
+                "echo 'HELLO' > dir1/hello.txt",
+                "mkdir dir2",
+            ]
+        )
+        self.prepare(filesystem_setup)
+        self.out = deque()
+
+    def tearDown(self):
+        p = subprocess.run(["rm", "-r", "unittests"], stdout=subprocess.DEVNULL)
+        if p.returncode != 0:
+            print("error: failed to remove unittests directory")
+            exit(1)
 
     def test_cat_no_args(self):
         cat = app.Cat()
@@ -133,12 +208,25 @@ class TestApplications(unittest.TestCase):
     def test_cat_invalid_file(self):
         cat = app.Cat()
         self.assertRaises(
-            FileNotFoundError, cat.exec, ["dir5/test.txt"], self.out, False
+            FileNotFoundError, cat.exec, ["dir3/test.txt"], self.out, False
         )
 
-    def test_cat_folder(self):
+    def test_cat_invalid_folder(self):
         cat = app.Cat()
         self.assertRaises(FileNotFoundError, cat.exec, ["dir5"], self.out, False)
+
+    def test_cat_valid_folder(self):
+        cat = app.Cat()
+        self.assertRaises(FileNotFoundError, cat.exec, ["dir1"], self.out, False)
+
+    def test_cat_two_files(self):
+        cat = app.Cat()
+        cat.exec(["unittests/test1.txt", "unittests/test2.txt"], self.out, False)
+        self.assertEqual(len(self.out), 1)
+        self.assertEqual(
+            self.out.pop(),
+            "AAA\nBBB\n",
+        )
 
     def test_cat(self):
         cat = app.Cat()
@@ -146,8 +234,13 @@ class TestApplications(unittest.TestCase):
         self.assertEqual(len(self.out), 1)
         self.assertEqual(
             self.out.pop().strip(),
-            "abcdef had a dog, then they had a book \n When it asdtnnasn it wanted to asjdiansdnainsd it siansdinanis",
+            "AAA",
         )
+
+
+class TestEcho(unittest.TestCase):
+    def setUp(self):
+        self.out = deque()
 
     def test_echo_no_args(self):
         echo = app.Echo()
@@ -167,12 +260,44 @@ class TestApplications(unittest.TestCase):
         self.assertEqual(len(self.out), 1)
         self.assertEqual(self.out.pop().strip(), "foo bar")
 
+
+class TestHead(unittest.TestCase):
+    @classmethod
+    def prepare(cls, cmdline):
+        args = [
+            "/bin/bash",
+            "-c",
+            cmdline,
+        ]
+        p = subprocess.run(args, capture_output=True)
+        return p.stdout.decode()
+
+    def setUp(self):
+        p = subprocess.run(["mkdir", "unittests"], stdout=subprocess.DEVNULL)
+        if p.returncode != 0:
+            print("error: failed to create unittest directory")
+            exit(1)
+        filesystem_setup = ";".join(
+            [
+                "cd unittests",
+                "echo 'a\nb\nc\nd\ne\nf\ng\nh\ni\nj\nk\nl\nm\nn\no\np\nq\nr\ns\nt\nu\nv\nw\nx\ny\nz' > alphabet.txt",
+            ]
+        )
+        self.prepare(filesystem_setup)
+        self.out = deque()
+
+    def tearDown(self):
+        p = subprocess.run(["rm", "-r", "unittests"], stdout=subprocess.DEVNULL)
+        if p.returncode != 0:
+            print("error: failed to remove unittests directory")
+            exit(1)
+
     def test_head_read_first_n_lines_from_file_fake_file(self):
         head = app.Head()
         self.assertRaises(
             FileNotFoundError,
             head._read_first_n_lines_from_file,
-            "unittests/test4.txt",
+            "unittests/test.txt",
             10,
             self.out,
         )
@@ -271,12 +396,44 @@ class TestApplications(unittest.TestCase):
             ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"],
         )
 
+
+class TestTail(unittest.TestCase):
+    @classmethod
+    def prepare(cls, cmdline):
+        args = [
+            "/bin/bash",
+            "-c",
+            cmdline,
+        ]
+        p = subprocess.run(args, capture_output=True)
+        return p.stdout.decode()
+
+    def setUp(self):
+        p = subprocess.run(["mkdir", "unittests"], stdout=subprocess.DEVNULL)
+        if p.returncode != 0:
+            print("error: failed to create unittest directory")
+            exit(1)
+        filesystem_setup = ";".join(
+            [
+                "cd unittests",
+                "echo 'a\nb\nc\nd\ne\nf\ng\nh\ni\nj\nk\nl\nm\nn\no\np\nq\nr\ns\nt\nu\nv\nw\nx\ny\nz' > alphabet.txt",
+            ]
+        )
+        self.prepare(filesystem_setup)
+        self.out = deque()
+
+    def tearDown(self):
+        p = subprocess.run(["rm", "-r", "unittests"], stdout=subprocess.DEVNULL)
+        if p.returncode != 0:
+            print("error: failed to remove unittests directory")
+            exit(1)
+
     def test_tail_read_last_n_lines_from_file_fake_file(self):
         tail = app.Tail()
         self.assertRaises(
             FileNotFoundError,
             tail._read_last_n_lines_from_file,
-            "unittests/test4.txt",
+            "unittests/test.txt",
             10,
             self.out,
         )
@@ -375,7 +532,39 @@ class TestApplications(unittest.TestCase):
             ["q", "r", "s", "t", "u", "v", "w", "x", "y", "z"],
         )
 
-    """testing grep"""
+
+class TestGrep(unittest.TestCase):
+    @classmethod
+    def prepare(cls, cmdline):
+        args = [
+            "/bin/bash",
+            "-c",
+            cmdline,
+        ]
+        p = subprocess.run(args, capture_output=True)
+        return p.stdout.decode()
+
+    def setUp(self):
+        p = subprocess.run(["mkdir", "unittests"], stdout=subprocess.DEVNULL)
+        if p.returncode != 0:
+            print("error: failed to create unittest directory")
+            exit(1)
+        filesystem_setup = ";".join(
+            [
+                "cd unittests",
+                "echo AAA > test1.txt",
+                "echo BBB > test2.txt",
+                "echo CCC > test3.txt",
+            ]
+        )
+        self.prepare(filesystem_setup)
+        self.out = deque()
+
+    def tearDown(self):
+        p = subprocess.run(["rm", "-r", "unittests"], stdout=subprocess.DEVNULL)
+        if p.returncode != 0:
+            print("error: failed to remove unittests directory")
+            exit(1)
 
     def test_grep_find_matches_from_stdin_with_match_all(self):
         grep = app.Grep()
@@ -495,6 +684,141 @@ class TestApplications(unittest.TestCase):
         self.assertEqual(len(self.out), 1)
         self.assertListEqual(self.out.pop().split("\n"), ["unittests/test2.txt:BBB"])
 
+
+class TestCut(unittest.TestCase):
+    @classmethod
+    def prepare(cls, cmdline):
+        args = [
+            "/bin/bash",
+            "-c",
+            cmdline,
+        ]
+        p = subprocess.run(args, capture_output=True)
+        return p.stdout.decode()
+
+    def setUp(self):
+        p = subprocess.run(["mkdir", "unittests"], stdout=subprocess.DEVNULL)
+        if p.returncode != 0:
+            print("error: failed to create unittest directory")
+            exit(1)
+        filesystem_setup = ";".join(
+            [
+                "cd unittests",
+                "echo 'abcdef had a dog, then they had a book \n When it asdtnnasn it wanted to asjdiansdnainsd it siansdinanis' > test1.txt",
+            ]
+        )
+        self.prepare(filesystem_setup)
+        self.out = deque()
+
+    def tearDown(self):
+        p = subprocess.run(["rm", "-r", "unittests"], stdout=subprocess.DEVNULL)
+        if p.returncode != 0:
+            print("error: failed to remove unittests directory")
+            exit(1)
+
+    def test_cut_get_section_single_param(self):
+        cut = app.Cut()
+        param = ["1"]
+        line = "Hello there"
+        res = cut._get_section(param, line)
+        self.assertEqual(res, "H")
+
+    def test_cut_get_section_from_n_to_end(self):
+        cut = app.Cut()
+        param = ["3-"]
+        line = "Hello there"
+        res = cut._get_section(param, line)
+        self.assertEqual(res, "llo there")
+
+    def test_cut_get_section_from_start_to_n(self):
+        cut = app.Cut()
+        param = ["-3"]
+        line = "Hello there"
+        res = cut._get_section(param, line)
+        self.assertEqual(res, "Hel")
+
+    def test_cut_get_section_from_start_to_m(self):
+        cut = app.Cut()
+        param = ["4-7"]
+        line = "Hello there"
+        res = cut._get_section(param, line)
+        self.assertEqual(res, "lo t")
+
+    def test_cut_get_section_multiple_param(self):
+        cut = app.Cut()
+        param = ["1", "3-4", "7-"]
+        line = "Hello there"
+        res = cut._get_section(param, line)
+        self.assertEqual(res, "Hllthere")
+
+    def test_cut__calculate(self):
+        cut = app.Cut()
+        param = ["1", "3-4", "7-"]
+        lines = ["Hello there", "Loren ipsum dome", "Give me ideas"]
+        res = cut._calculate(param, lines)
+        self.assertEqual(res, "Hllthere\nLreipsum dome\nGvee ideas")
+
+    def test_cut_file(self):
+        cut = app.Cut()
+        args = ["-b", "19-38", "unittests/test1.txt"]
+        cut.exec(args, self.out, False)
+        res = self.out.pop().splitlines()
+        self.assertCountEqual(res, ["then they had a book", "it wanted to asjdian"])
+
+    def test_cut_pipe(self):
+        cut = app.Cut()
+        self.out.append("Hello World")
+        args = ["-b", "7-9,10"]
+        cut.exec(args, self.out, True)
+        res = self.out.pop()
+        self.assertEqual(res, "Word")
+
+    def test_cut_invalid_arguments(self):
+        cut = app.Cut()
+        args = ["-b", "7-9,1"]
+        self.assertRaises(
+            app.ApplicationExcecutionError, cut.exec, args, self.out, False
+        )
+
+
+class TestFind(unittest.TestCase):
+    @classmethod
+    def prepare(cls, cmdline):
+        args = [
+            "/bin/bash",
+            "-c",
+            cmdline,
+        ]
+        p = subprocess.run(args, capture_output=True)
+        return p.stdout.decode()
+
+    def setUp(self):
+        p = subprocess.run(["mkdir", "unittests"], stdout=subprocess.DEVNULL)
+        if p.returncode != 0:
+            print("error: failed to create unittest directory")
+            exit(1)
+        filesystem_setup = ";".join(
+            [
+                "cd unittests",
+                "echo AAA > test1.txt",
+                "echo BBB > test2.txt",
+                "echo CCC > test3.txt",
+                "echo 'a\nb\nc\nd\ne\nf\ng\nh\ni\nj\nk\nl\nm\nn\no\np\nq\nr\ns\nt\nu\nv\nw\nx\ny\nz' > alphabet.txt",
+                "mkdir dir1",
+                "echo DDD > dir1/.test3.txt",
+                "echo HELLO > dir1/hello.txt",
+                "mkdir dir2",
+            ]
+        )
+        self.prepare(filesystem_setup)
+        self.out = deque()
+
+    def tearDown(self):
+        p = subprocess.run(["rm", "-r", "unittests"], stdout=subprocess.DEVNULL)
+        if p.returncode != 0:
+            print("error: failed to remove unittests directory")
+            exit(1)
+
     def test_find_get_path_and_pattern_no_args(self):
         find = app.Find()
         self.assertRaises(
@@ -557,6 +881,136 @@ class TestApplications(unittest.TestCase):
         find.exec(["unittests", "-name", "hello.txt"], self.out, False)
         result = set(re.split("\n|\t", self.out.pop().strip()))
         self.assertEqual(result, {"unittests/dir1/hello.txt"})
+
+
+class TestUniq(unittest.TestCase):
+    @classmethod
+    def prepare(cls, cmdline):
+        args = [
+            "/bin/bash",
+            "-c",
+            cmdline,
+        ]
+        p = subprocess.run(args, capture_output=True)
+        return p.stdout.decode()
+
+    def setUp(self):
+        p = subprocess.run(["mkdir", "unittests"], stdout=subprocess.DEVNULL)
+        if p.returncode != 0:
+            print("error: failed to create unittest directory")
+            exit(1)
+        filesystem_setup = ";".join(
+            [
+                "cd unittests",
+                "echo 'HELLO\nhello\nhello\nhello\nhello\nHello\nHEllo\nHeLlo\nHeLLo\nhello\nhEllO\nhElLo' > hello.txt",
+            ]
+        )
+        self.prepare(filesystem_setup)
+        self.out = deque()
+
+    def tearDown(self):
+        p = subprocess.run(["rm", "-r", "unittests"], stdout=subprocess.DEVNULL)
+        if p.returncode != 0:
+            print("error: failed to remove unittests directory")
+            exit(1)
+
+    def test_uniq_lines_case_insensitive(self):
+        uniq = app.Uniq()
+        lines = ["Say once\n", "sAy OnCe\n", "saY oNCE\n", "Uniq\n"]
+        uniq._uniq_lines(self.out, lines, True)
+        res = self.out.pop()
+        self.assertEqual(res, "Say once\nUniq\n")
+
+    def test_uniq_lines_not_case_insensitive(self):
+        uniq = app.Uniq()
+        lines = ["Say once\n", "sAy OnCe\n", "saY oNCE\n", "Uniq\n"]
+        uniq._uniq_lines(self.out, lines, False)
+        res = self.out.pop()
+        self.assertEqual(res, "Say once\nsAy OnCe\nsaY oNCE\nUniq\n")
+
+    def test_uniq_check_flags(self):
+        uniq = app.Uniq()
+        args = ["-i", "test.txt"]
+        res = uniq._correct_flags(len(args), args, False)
+        self.assertTrue(res)
+
+    def test_uniq_check_flags_pipe(self):
+        uniq = app.Uniq()
+        args = ["-i"]
+        res = uniq._correct_flags(len(args), args, True)
+        self.assertTrue(res)
+
+    def test_uniq_file(self):
+        uniq = app.Uniq()
+        args = ["unittests/hello.txt"]
+        uniq.exec(args, self.out, False)
+        res = self.out.pop()
+        self.assertEqual(
+            res, "HELLO\nhello\nHello\nHEllo\nHeLlo\nHeLLo\nhello\nhEllO\nhElLo\n"
+        )
+
+    def test_uniq_file_case_insensitive(self):
+        uniq = app.Uniq()
+        args = ["-i", "unittests/hello.txt"]
+        uniq.exec(args, self.out, False)
+        res = self.out.pop()
+        self.assertEqual(res, "HELLO\n")
+
+    def test_uniq_pipe_case(self):
+        uniq = app.Uniq()
+        self.out.append("Say once\nSay once\nSaY oNCE\nUniq\n")
+        args = []
+        uniq.exec(args, self.out, True)
+        res = self.out.pop()
+        self.assertEqual(res, "Say once\nSaY oNCE\nUniq\n")
+
+    def test_uniq_pipe_case_insensitive(self):
+        uniq = app.Uniq()
+        self.out.append("Say once\nsAy OnCe\nsaY oNCE\nUniq\n")
+        args = ["-i"]
+        uniq.exec(args, self.out, True)
+        res = self.out.pop()
+        self.assertEqual(res, "Say once\nUniq\n")
+
+    def test_uniq_incorrect_args(self):
+        uniq = app.Uniq()
+        args = ["test.txt", "-i"]
+        self.assertRaises(
+            app.ApplicationExcecutionError, uniq.exec, args, self.out, False
+        )
+
+
+class TestSort(unittest.TestCase):
+    @classmethod
+    def prepare(cls, cmdline):
+        args = [
+            "/bin/bash",
+            "-c",
+            cmdline,
+        ]
+        p = subprocess.run(args, capture_output=True)
+        return p.stdout.decode()
+
+    def setUp(self):
+        p = subprocess.run(["mkdir", "unittests"], stdout=subprocess.DEVNULL)
+        if p.returncode != 0:
+            print("error: failed to create unittest directory")
+            exit(1)
+        filesystem_setup = ";".join(
+            [
+                "cd unittests",
+                "echo 'abcdef had a dog, then they had a book \n When it asdtnnasn it wanted to asjdiansdnainsd it siansdinanis' > test1.txt",
+                "echo 'a\nb\nc\nd\ne\nf\ng\nh\ni\nj\nk\nl\nm\nn\no\np\nq\nr\ns\nt\nu\nv\nw\nx\ny\nz' > alphabet.txt",
+            ]
+        )
+        self.prepare(filesystem_setup)
+        self.out = deque()
+
+    def tearDown(self):
+        p = subprocess.run(["rm", "-r", "unittests"], stdout=subprocess.DEVNULL)
+        if p.returncode != 0:
+            print("error: failed to remove unittests directory")
+            exit(1)
 
     def test_sort_sort_contents_empty_contents(self):
         sort = app.Sort()
@@ -703,129 +1157,3 @@ class TestApplications(unittest.TestCase):
                 "abcdef had a dog, then they had a book",
             ],
         )
-
-    """***************** CUT TEST ******************************* """
-    def test_cut_get_section_single_param(self):
-        cut = app.Cut()
-        param = ['1']
-        line = "Hello there"
-        res = cut._get_section(param, line)
-        self.assertEqual(res, "H")
-    
-    def test_cut_get_section_from_n_to_end(self):
-        cut = app.Cut()
-        param = ['3-']
-        line = "Hello there"
-        res = cut._get_section(param, line)
-        self.assertEqual(res, "llo there")
-    
-    def test_cut_get_section_from_start_to_n(self):
-        cut = app.Cut()
-        param = ['-3']
-        line = "Hello there"
-        res = cut._get_section(param, line)
-        self.assertEqual(res, "Hel")
-
-    def test_cut_get_section_from_start_to_m(self):
-        cut = app.Cut()
-        param = ['4-7']
-        line = "Hello there"
-        res = cut._get_section(param, line)
-        self.assertEqual(res, "lo t")
-    
-    def test_cut_get_section_multiple_param(self):
-        cut = app.Cut()
-        param = ['1', '3-4', '7-']
-        line = "Hello there"
-        res = cut._get_section(param, line)
-        self.assertEqual(res, "Hllthere")
-    
-    def test_cut__calculate(self):
-        cut = app.Cut()
-        param = ['1', '3-4', '7-']
-        lines = ['Hello there', 'Loren ipsum dome', "Give me ideas"]
-        res = cut._calculate(param, lines)
-        self.assertEqual(res, 'Hllthere\nLreipsum dome\nGvee ideas')
-    
-    def test_cut_file(self):
-        cut = app.Cut()
-        args = ['-b', '19-38', 'unittests/test1.txt']
-        cut.exec(args, self.out, False)
-        res = self.out.pop().splitlines()
-        self.assertCountEqual(res, ['then they had a book', 'it wanted to asjdian'])
-    
-    def test_cut_pipe(self):
-        cut = app.Cut()
-        self.out.append("Hello World")
-        args = ['-b', '7-9,10']
-        cut.exec(args, self.out, True)
-        res = self.out.pop()
-        self.assertEqual(res, 'Word')
-    
-    def test_cut_invalid_arguments(self):
-        cut = app.Cut()
-        args = ['-b', '7-9,1']
-        self.assertRaises(app.ApplicationExcecutionError, cut.exec, args, self.out, False)
-    
-    """***************** UNIQ TESTS ******************************* """
-
-    def test_uniq_lines_case_insensitive(self):
-        uniq = app.Uniq()
-        lines = ['Say once\n', 'sAy OnCe\n', 'saY oNCE\n', 'Uniq\n']
-        uniq._uniq_lines(self.out, lines, True)
-        res = self.out.pop()
-        self.assertEqual(res, 'Say once\nUniq\n')
-
-    def test_uniq_lines_not_case_insensitive(self):
-        uniq = app.Uniq()
-        lines = ['Say once\n', 'sAy OnCe\n', 'saY oNCE\n', 'Uniq\n']
-        uniq._uniq_lines(self.out, lines, False)
-        res = self.out.pop()
-        self.assertEqual(res, 'Say once\nsAy OnCe\nsaY oNCE\nUniq\n')
-
-    def test_uniq_check_flags(self):
-        uniq = app.Uniq()
-        args = ['-i', 'test.txt']
-        res = uniq._correct_flags(len(args), args, False)
-        self.assertTrue(res)
-    
-    def test_uniq_check_flags_pipe(self):
-        uniq = app.Uniq()
-        args = ['-i']
-        res = uniq._correct_flags(len(args), args, True)
-        self.assertTrue(res)
-    
-    def test_uniq_file(self):
-        uniq = app.Uniq()
-        args = ["unittests/dir1/hello.txt"]
-        uniq.exec(args, self.out, False)
-        res = self.out.pop()
-        self.assertEqual(res, 'HELLO\nhello\nHello\nHEllo\nHeLlo\nHeLLo\nhello\nhEllO\nhElLo\n')
-    
-    def test_uniq_file_case_insensitive(self):
-        uniq = app.Uniq()
-        args = ["-i", "unittests/dir1/hello.txt"]
-        uniq.exec(args, self.out, False)
-        res = self.out.pop()
-        self.assertEqual(res, 'HELLO\n')
-
-    def test_uniq_pipe_case(self):
-        uniq = app.Uniq()
-        self.out.append('Say once\nSay once\nSaY oNCE\nUniq\n')
-        args = []
-        uniq.exec(args, self.out, True)
-        res = self.out.pop()
-        self.assertEqual(res, 'Say once\nSaY oNCE\nUniq\n')
-
-    def test_uniq_pipe_case_insensitive(self):
-        uniq = app.Uniq()
-        self.out.append('Say once\nsAy OnCe\nsaY oNCE\nUniq\n')
-        args = ["-i"]
-        uniq.exec(args, self.out, True)
-        res = self.out.pop()
-        self.assertEqual(res, 'Say once\nUniq\n')
-
-    def test_uniq_incorrect_args(self):
-        uniq = app.Uniq()
-        args = ["test.txt", "-i"]
-        self.assertRaises(app.ApplicationExcecutionError, uniq.exec, args, self.out, False)
