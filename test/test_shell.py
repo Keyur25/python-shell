@@ -66,7 +66,7 @@ class TestShell(unittest.TestCase):
     def test_eval_with_unrecognised_command(self):
         out = deque()
         shell_evaluator("echo '''", out)
-        self.assertEqual(out.popleft(), "Unrecognized Input: echo '''")
+        self.assertEqual(out.popleft(), "Unrecognized Input: echo '''\n")
         self.assertEqual(len(out), 0)
 
       
