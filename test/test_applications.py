@@ -22,6 +22,10 @@ class TestPwd(unittest.TestCase):
         pwd.exec([], self.out, False)
         self.assertEqual(len(self.out), 1)
         self.assertEqual(self.out.pop().strip(), os.getcwd())
+    
+    def test_pwd_in_pipe(self):
+        pwd = app.Pwd()
+        self.assertRaises(app.ApplicationExcecutionError, pwd.exec, [], self.out, True)
 
 
 class TestCd(unittest.TestCase):
@@ -77,6 +81,10 @@ class TestCd(unittest.TestCase):
         self.assertEqual(len(self.out), 0)
         self.assertEqual(old_file_path + "/unittests", os.getcwd())
         cd.exec([".."], self.out, False)
+
+    def test_cd_in_pipe(self):
+        cd = app.Cd()
+        self.assertRaises(app.ApplicationExcecutionError, cd.exec, [], self.out, True)
 
 
 class TestLs(unittest.TestCase):
@@ -152,6 +160,10 @@ class TestLs(unittest.TestCase):
             result,
             ["dir1", "dir2", "test1.txt", "test2.txt", "test3.txt"],
         )
+
+    def test_ls_in_pipe(self):
+        ls = app.Ls()
+        self.assertRaises(app.ApplicationExcecutionError, ls.exec, [], self.out, True)
 
 
 class TestCat(unittest.TestCase):
@@ -259,6 +271,10 @@ class TestEcho(unittest.TestCase):
         echo.exec(["foo bar"], self.out, False)
         self.assertEqual(len(self.out), 1)
         self.assertEqual(self.out.pop().strip(), "foo bar")
+
+    def test_echo_in_pipe(self):
+        echo = app.Echo()
+        self.assertRaises(app.ApplicationExcecutionError, echo.exec, [], self.out, True)
 
 
 class TestHead(unittest.TestCase):
@@ -882,6 +898,10 @@ class TestFind(unittest.TestCase):
         result = set(re.split("\n|\t", self.out.pop().strip()))
         self.assertEqual(result, {"unittests/dir1/hello.txt"})
 
+    def test_find_in_pipe(self):
+        find = app.Find()
+        self.assertRaises(app.ApplicationExcecutionError, find.exec, [], self.out, True)
+
 
 class TestUniq(unittest.TestCase):
     @classmethod
@@ -978,6 +998,7 @@ class TestUniq(unittest.TestCase):
         self.assertRaises(
             app.ApplicationExcecutionError, uniq.exec, args, self.out, False
         )
+
 
 
 class TestSort(unittest.TestCase):
