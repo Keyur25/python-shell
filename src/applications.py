@@ -64,7 +64,7 @@ class Cat(Application):
         if not args:
             if not in_pipe:
                 raise ApplicationExcecutionError("Invalid Arguments")
-            args = out.pop()  # get input from stdin
+            args = out.pop().split(" ")  # get input from stdin
         lines = []
         for a in args:
             with open(a.strip()) as f:
@@ -98,7 +98,12 @@ class Head(Application):
             self._read_first_n_lines_from_file(out.pop(), 10, out)
         elif no_of_args == 1:  # default case
             self._read_first_n_lines_from_file(args[0], 10, out)
-        elif no_of_args == 3 and args[0] == "-n" and args[1].isnumeric():
+        elif (
+            no_of_args == 3
+            and args[0] == "-n"
+            and args[1].isnumeric()
+            and int(args[1]) >= 0
+        ):
             self._read_first_n_lines_from_file(args[2], int(args[1]), out)
         else:
             raise ApplicationExcecutionError("Invalid Arguments")
@@ -124,7 +129,12 @@ class Tail(Application):
             self._read_last_n_lines_from_file(out.pop(), 10, out)
         elif no_of_args == 1:  # default case
             self._read_last_n_lines_from_file(args[0], 10, out)
-        elif no_of_args == 3 and args[0] == "-n" and args[1].isnumeric():
+        elif (
+            no_of_args == 3
+            and args[0] == "-n"
+            and args[1].isnumeric()
+            and int(args[1]) >= 0
+        ):
             self._read_last_n_lines_from_file(args[2], int(args[1]), out)
         else:
             raise ApplicationExcecutionError("Invalid Arguments")
@@ -189,20 +199,21 @@ class Cut(Application):
         """
         result = ""
         for param in no_of_bytes_param:
-            if len(param) == 1 and int(param) <= len(
+            param_section = [p for p in re.split("(-)", param) if p != '']
+            if len(param_section) == 1 and int(param_section[0]) <= len(
                 line
             ):  # Single byte arg. e.g. -b n
-                result += self._single_param(line, param)
-            elif len(param) == 2:
+                result += self._single_param(line, param_section[0])
+            elif len(param_section) == 2:
                 # -b -n (from first byte to nth byte) or -b n- (from nth byte to last byte)
-                if param[0] == "-":  # Case -b -n
-                    result += line[: int(param[1])]
-                elif param[1] == "-":  # Case -b n-
-                    result += str(line[int(param[0]) - 1 :])
+                if param_section[0] == "-":  # Case -b -n
+                    result += line[: int(param_section[1])]
+                elif param_section[1] == "-":  # Case -b n-
+                    result += str(line[int(param_section[0]) - 1 :])
                     break
-            elif len(param) == 3:
+            elif len(param_section) == 3 and param_section[1] == "-":
                 # -b n-m (from nth byte to mth byte)
-                result += line[int(param[0]) - 1 : int(param[2])]
+                result += line[int(param_section[0]) - 1 : int(param_section[2])]
         return result
 
     def _single_param(self, line, param):
@@ -218,10 +229,10 @@ class Cut(Application):
         for line in lines:
             result += self._get_section(no_of_bytes_param, line.strip()) + "\n"
         return result[:-1]
-
+    
     def exec(self, args, out, in_pipe):
         no_of_bytes_param = args[1].split(",")
-        no_of_bytes_param.sort()
+        no_of_bytes_param.sort(key=lambda x : int(x.split('-')[0]) if x.split('-')[0] != '' else -ord(x[0]))
         if len(args) == 2:
             if not in_pipe:
                 raise ApplicationExcecutionError("Invalid Arguments")
@@ -364,7 +375,7 @@ class Sort(Application):
         if num_of_args == 0 and in_pipe:
             contents_of_input = self._input_from_stdin(out)
             self._sort_contents(contents_of_input, out)
-        elif args[0] == "-r":
+        elif num_of_args > 0 and args[0] == "-r":
             self._reverse_options(args, out, num_of_args)
         elif num_of_args == 1:
             file_name = args[0]
