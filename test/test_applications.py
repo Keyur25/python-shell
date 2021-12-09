@@ -31,7 +31,7 @@ class TestApplications(unittest.TestCase):
                 "mkdir dir1",
                 "echo DDD > dir1/.test3.txt",
                 "mkdir dir2",
-                "echo 'HELLO THERE' > dir1/hello.txt",
+                "echo 'HELLO\nhello\nhello\nhello\nhello\nHello\nHEllo\nHeLlo\nHeLLo\nhello\nhEllO\nhElLo' > dir1/hello.txt",
                 "echo 'a\nb\nc\nd\ne\nf\ng\nh\ni\nj\nk\nl\nm\nn\no\np\nq\nr\ns\nt\nu\nv\nw\nx\ny\nz' > alphabet.txt",
             ]
         )
@@ -766,3 +766,66 @@ class TestApplications(unittest.TestCase):
         cut = app.Cut()
         args = ['-b', '7-9,1']
         self.assertRaises(app.ApplicationExcecutionError, cut.exec, args, self.out, False)
+    
+    """***************** UNIQ TESTS ******************************* """
+
+    def test_uniq_lines_case_insensitive(self):
+        uniq = app.Uniq()
+        lines = ['Say once\n', 'sAy OnCe\n', 'saY oNCE\n', 'Uniq\n']
+        uniq._uniq_lines(self.out, lines, True)
+        res = self.out.pop()
+        self.assertEqual(res, 'Say once\nUniq\n')
+
+    def test_uniq_lines_not_case_insensitive(self):
+        uniq = app.Uniq()
+        lines = ['Say once\n', 'sAy OnCe\n', 'saY oNCE\n', 'Uniq\n']
+        uniq._uniq_lines(self.out, lines, False)
+        res = self.out.pop()
+        self.assertEqual(res, 'Say once\nsAy OnCe\nsaY oNCE\nUniq\n')
+
+    def test_uniq_check_flags(self):
+        uniq = app.Uniq()
+        args = ['-i', 'test.txt']
+        res = uniq._correct_flags(len(args), args, False)
+        self.assertTrue(res)
+    
+    def test_uniq_check_flags_pipe(self):
+        uniq = app.Uniq()
+        args = ['-i']
+        res = uniq._correct_flags(len(args), args, True)
+        self.assertTrue(res)
+    
+    def test_uniq_file(self):
+        uniq = app.Uniq()
+        args = ["unittests/dir1/hello.txt"]
+        uniq.exec(args, self.out, False)
+        res = self.out.pop()
+        self.assertEqual(res, 'HELLO\nhello\nHello\nHEllo\nHeLlo\nHeLLo\nhello\nhEllO\nhElLo\n')
+    
+    def test_uniq_file_case_insensitive(self):
+        uniq = app.Uniq()
+        args = ["-i", "unittests/dir1/hello.txt"]
+        uniq.exec(args, self.out, False)
+        res = self.out.pop()
+        self.assertEqual(res, 'HELLO\n')
+
+    def test_uniq_pipe_case(self):
+        uniq = app.Uniq()
+        self.out.append('Say once\nSay once\nSaY oNCE\nUniq\n')
+        args = []
+        uniq.exec(args, self.out, True)
+        res = self.out.pop()
+        self.assertEqual(res, 'Say once\nSaY oNCE\nUniq\n')
+
+    def test_uniq_pipe_case_insensitive(self):
+        uniq = app.Uniq()
+        self.out.append('Say once\nsAy OnCe\nsaY oNCE\nUniq\n')
+        args = ["-i"]
+        uniq.exec(args, self.out, True)
+        res = self.out.pop()
+        self.assertEqual(res, 'Say once\nUniq\n')
+
+    def test_uniq_incorrect_args(self):
+        uniq = app.Uniq()
+        args = ["test.txt", "-i"]
+        self.assertRaises(app.ApplicationExcecutionError, uniq.exec, args, self.out, False)
