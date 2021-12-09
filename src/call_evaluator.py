@@ -2,27 +2,21 @@ from glob import glob
 from lark.visitors import Visitor_Recursive
 from lark import Tree, Token
 from parser import Parser
-
-class InvalidCommandSubstitution(Exception):
-
-    """raised when there is an invalid command substitution"""
-
-    def __init__(self, message):
-        self.message = message
-        super().__init__(self.message)
+from exceptions import InvalidCommandSubstitution
 
 
 class CommandSubstituitionVisitor(Visitor_Recursive):
     """
     Visits a call tree, and replaces backquoted content
     with its evaluated result.
-    
+
     echo `echo foo` -> echo foo
     `echo echo` bar -> echo bar
     """
+
     def __init__(self, out):
         self.out = out
-    
+
     def _eval_command_substituition(self, command, out):
         """
         Evaluates command substitution and returns the number of outputs
@@ -33,7 +27,7 @@ class CommandSubstituitionVisitor(Visitor_Recursive):
         """
         from commands import Seq
         from command_evaluator import extract_raw_commands
-        
+
         parser = Parser()
         command_tree = parser.command_level_parse(command)
         if not command_tree:
@@ -50,28 +44,31 @@ class CommandSubstituitionVisitor(Visitor_Recursive):
         """
         no_of_outputs = self._eval_command_substituition(tree.children[0], self.out)
         if not no_of_outputs:
-            raise InvalidCommandSubstitution("Invalid Command Substitution: " + str(tree.children[0]))
+            raise InvalidCommandSubstitution(
+                "Invalid Command Substitution: " + str(tree.children[0])
+            )
         res = []
-        for _ in range(no_of_outputs): #get correct no. of outputs from out
+        for _ in range(no_of_outputs):  # get correct no. of outputs from out
             res.append(self.out.pop().replace("\n", " ").strip())
         res.reverse()
-        tree.children[0] = " ".join(res) # replace backquoted command with outputs
-        
+        tree.children[0] = " ".join(res)  # replace backquoted command with outputs
+
 
 class RedirectionVisitor(Visitor_Recursive):
     """
     Visits a redirection tree, a sub tree of a call tree,
     and extracts the IO type (< or >), and the file name.
     """
+
     def __init__(self):
         self.io_type = None
         self.file_name = ""
 
     def _extract_quoted_content(self, node):
         if len(node.children) > 0:
-            self.file_name+=str(node.children[0])
+            self.file_name += str(node.children[0])
         else:
-            self.file_name+=""
+            self.file_name += ""
 
     def _double_quoted(self, tree):
         """
@@ -79,17 +76,16 @@ class RedirectionVisitor(Visitor_Recursive):
         including nested backquotes.
         """
         for child in tree.children:
-            if(type(child) is Token):
-                self.file_name+=str(child)
-            else: # backquoted
+            if type(child) is Token:
+                self.file_name += str(child)
+            else:  # backquoted
                 self._extract_quoted_content(child)
-
 
     def _quoted(self, tree):
         for child in tree.children:
-            if(child.data == "double_quoted"):
+            if child.data == "double_quoted":
                 self._double_quoted(child)
-            else: # single quoted or backquoted
+            else:  # single quoted or backquoted
                 self._extract_quoted_content(child)
 
     def argument(self, tree):
@@ -114,7 +110,7 @@ class CallTreeVisitor(Visitor_Recursive):
                                args = [foo, bar]
                                file_output = "file.txt"
     """
-    
+
     def __init__(self):
         self.application = None
         self.args = []
@@ -127,12 +123,12 @@ class CallTreeVisitor(Visitor_Recursive):
             self.file_output = redirection_visitor.file_name
         else:
             self.args.append(redirection_visitor.file_name)
-    
+
     def _extract_quoted_content(self, node):
         if len(node.children) > 0:
             return node.children[0]
         else:
-            return  ""
+            return ""
 
     def _double_quoted(self, tree):
         """
@@ -141,18 +137,18 @@ class CallTreeVisitor(Visitor_Recursive):
         """
         double_quoted_args = ""
         for child in tree.children:
-            if(type(child) is Token):
-                double_quoted_args+=str(child)
-            else: # backquoted
+            if type(child) is Token:
+                double_quoted_args += str(child)
+            else:  # backquoted
                 double_quoted_args += self._extract_quoted_content(child)
         return double_quoted_args
 
     def _quoted(self, tree):
         quoted_args = ""
         for child in tree.children:
-            if(child.data == "double_quoted"):
+            if child.data == "double_quoted":
                 quoted_args += self._double_quoted(child)
-            else: # single quoted or backquoted
+            else:  # single quoted or backquoted
                 quoted_args += self._extract_quoted_content(child)
         return quoted_args
 
@@ -163,7 +159,7 @@ class CallTreeVisitor(Visitor_Recursive):
                 self.args.append(" ".join(globbing))
                 return
         self.args.append(arg)
-        
+
     def _argument(self, tree):
         """
         extracts the argument from an atom, and applys
@@ -174,11 +170,11 @@ class CallTreeVisitor(Visitor_Recursive):
         for child in tree.children:
             if type(child) is Token:
                 arg += str(child)
-                unquoted_asterisk = "*" in str(child)    
+                unquoted_asterisk = "*" in str(child)
             else:
                 arg += self._quoted(child)
         self._globbing(arg, unquoted_asterisk)
-                
+
     def atom(self, tree):
         for child in tree.children:
             if child.data == "redirection":
@@ -195,17 +191,15 @@ class CallTreeVisitor(Visitor_Recursive):
         application = ""
         for child in tree.children:
             if type(child) is Token:
-                application += str(child) 
+                application += str(child)
             else:
                 application += self._quoted(child)
             self.application = application
 
-
     def call(self, tree):
         for child in tree.children:
             if child.data == "argument":
-                #an argument which is a child of a call will always contain the application.
+                # an argument which is a child of a call will always contain the application.
                 self._application(child)
             elif child.data == "redirection":
                 self._redirection(child)
-                

@@ -4,15 +4,7 @@ import sys
 import glob
 from os import listdir
 from application_interface import Application
-
-
-class ApplicationExcecutionError(Exception):
-
-    """raised when an application cannot be executed"""
-
-    def __init__(self, message):
-        self.message = message
-        super().__init__(self.message)
+from exceptions import ApplicationExcecutionError
 
 
 class Pwd(Application):
@@ -199,7 +191,7 @@ class Cut(Application):
         """
         result = ""
         for param in no_of_bytes_param:
-            param_section = [p for p in re.split("(-)", param) if p != '']
+            param_section = [p for p in re.split("(-)", param) if p != ""]
             if len(param_section) == 1 and int(param_section[0]) <= len(
                 line
             ):  # Single byte arg. e.g. -b n
@@ -229,10 +221,12 @@ class Cut(Application):
         for line in lines:
             result += self._get_section(no_of_bytes_param, line.strip()) + "\n"
         return result[:-1]
-    
+
     def exec(self, args, out, in_pipe):
         no_of_bytes_param = args[1].split(",")
-        no_of_bytes_param.sort(key=lambda x : int(x.split('-')[0]) if x.split('-')[0] != '' else -ord(x[0]))
+        no_of_bytes_param.sort(
+            key=lambda x: int(x.split("-")[0]) if x.split("-")[0] != "" else -ord(x[0])
+        )
         if len(args) == 2:
             if not in_pipe:
                 raise ApplicationExcecutionError("Invalid Arguments")
