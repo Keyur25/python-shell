@@ -1,7 +1,5 @@
 import unittest
 import subprocess
-from io import StringIO
-import sys
 from autocomplete import APPLICATIONS, Completer
 
 
@@ -36,25 +34,31 @@ class TestCommandEvaluator(unittest.TestCase):
         self.completer = Completer(APPLICATIONS.keys())
 
     def tearDown(self):
-        p = subprocess.run(["rm", "-r", "unittests"], stdout=subprocess.DEVNULL)
+        p = subprocess.run(
+            ["rm", "-r", "unittests"], stdout=subprocess.DEVNULL
+            )
         if p.returncode != 0:
             print("error: failed to remove unittests directory")
             exit(1)
-        
+
     def test_set_options(self):
         current_opts = self.completer.options
         self.completer.set_options(["cd", "clear", "cat"])
         new_opts = self.completer.options
         self.assertNotEqual(current_opts, new_opts)
         self.assertCountEqual(new_opts, ["cd", "clear", "cat"])
-    
+
     def test_options_to_files_and_folders(self):
         self.completer.set_options_to_files_and_folders("unittests/")
-        self.assertCountEqual(self.completer.options, ["dir1", "dir2", "outer.txt", "outer2.txt"])
+        self.assertCountEqual(
+            self.completer.options, ["dir1", "dir2", "outer.txt", "outer2.txt"]
+            )
 
         self.completer.set_options_to_files_and_folders("unittests/dir1/")
-        self.assertCountEqual(self.completer.options, ["hello.txt", "random.txt"])
-    
+        self.assertCountEqual(
+            self.completer.options, ["hello.txt", "random.txt"]
+            )
+
     def test_autocomplete_application(self):
         apps = APPLICATIONS.keys()
         text = "c"
@@ -76,13 +80,19 @@ class TestCommandEvaluator(unittest.TestCase):
                 res = self.completer.autocomplete_flag(text_split, "", 0)
                 break
         self.assertEqual(res, 'n')
-    
+
     def test_autocomplete_folder(self):
         text = "cd unit"
         text_split = text.split(' ')
         res = []
         for i in range(0, 2):
-            res.append(self.completer.autocomplete_files_and_folders(text_split, text_split[-1], i))
+            res.append(
+                self.completer.autocomplete_files_and_folders(
+                    text_split,
+                    text_split[-1],
+                    i
+                    )
+                    )
         self.assertCountEqual(res, ["unittests/", None])
 
     def test_autocomplete_folder_duplicate(self):
@@ -90,7 +100,11 @@ class TestCommandEvaluator(unittest.TestCase):
         text_split = text.split(' ')
         res = []
         for i in range(0, 3):
-            res.append(self.completer.autocomplete_files_and_folders(text_split, "dir", i))
+            res.append(
+                self.completer.autocomplete_files_and_folders(
+                    text_split, "dir", i
+                    )
+                    )
         self.assertCountEqual(res, ["dir1/", "dir2/", None])
 
     def test_autocomplete_file(self):
@@ -98,7 +112,11 @@ class TestCommandEvaluator(unittest.TestCase):
         text_split = text.split(' ')
         res = []
         for i in range(0, 2):
-            res.append(self.completer.autocomplete_files_and_folders(text_split, "h", i))
+            res.append(
+                self.completer.autocomplete_files_and_folders(
+                    text_split, "h", i
+                    )
+                    )
         self.assertCountEqual(res, ["hello.txt", None])
 
     def test_autocomplete_file_duplicate(self):
@@ -106,9 +124,12 @@ class TestCommandEvaluator(unittest.TestCase):
         text_split = text.split(' ')
         res = []
         for i in range(0, 3):
-            res.append(self.completer.autocomplete_files_and_folders(text_split, "", i))
+            res.append(
+                self.completer.autocomplete_files_and_folders(
+                    text_split, "", i)
+                    )
         self.assertCountEqual(res, ["hello.txt", "random.txt", None])
-    
+
     def test_check_app(self):
         cmd = "c"
         if cmd[-1] == '/':
@@ -119,7 +140,7 @@ class TestCommandEvaluator(unittest.TestCase):
         for i in range(0, 5):
             res.append(self.completer.check(text, i, cmd))
         self.assertCountEqual(res, ["cd", "cat", "clear", "cut", None])
-    
+
     def test_check_app_flag(self):
         cmd = "head -"
         if cmd[-1] == '/':
@@ -141,7 +162,7 @@ class TestCommandEvaluator(unittest.TestCase):
         for i in range(0, 3):
             res.append(self.completer.check(text, i, cmd))
         self.assertCountEqual(res, ["hello.txt", "random.txt", None])
-    
+
     def test_check_folder(self):
         cmd = "cd unittests/dir"
         if cmd[-1] == '/':
@@ -152,18 +173,6 @@ class TestCommandEvaluator(unittest.TestCase):
         for i in range(0, 3):
             res.append(self.completer.check(text, i, cmd))
         self.assertCountEqual(res, ["dir1/", "dir2/", None])
-        
-        
-        
-        
-
-            
-        
-        
-        
-        
-
-    
 
 
 if __name__ == "__main__":

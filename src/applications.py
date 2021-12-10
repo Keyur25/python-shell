@@ -15,7 +15,9 @@ class Pwd(Application):
         if args:
             raise ApplicationExcecutionError("Pwd Takes No Arguments")
         elif in_pipe:
-            raise ApplicationExcecutionError("Pwd Can Not Take Arguments From stdin")
+            raise ApplicationExcecutionError(
+                "Pwd Can Not Take Arguments From stdin"
+                )
         out.append(os.getcwd() + "\n")
 
 
@@ -25,7 +27,9 @@ class Cd(Application):
 
     def exec(self, args, out, in_pipe):
         if in_pipe:
-            raise ApplicationExcecutionError("Cd Can Not Take Arguments From stdin")
+            raise ApplicationExcecutionError(
+                "Cd Can Not Take Arguments From stdin"
+                )
         elif len(args) != 1:
             raise ApplicationExcecutionError("Invalid Arguments")
         os.chdir(args[0])
@@ -45,12 +49,13 @@ class Ls(Application):
 
     def exec(self, args, out, in_pipe):
         if in_pipe:
-            raise ApplicationExcecutionError("Ls Can Not Take Arguments From stdin")
-            
+            raise ApplicationExcecutionError(
+                "Ls Can Not Take Arguments From stdin"
+                )
         ls_dir = self._get_directory(args)
         contents = []
         for f in listdir(ls_dir):
-            if not f.startswith("."):  # if f is hidden then we do not want to list it
+            if not f.startswith("."):  # if f is hidden, do not add to list
                 contents.append(f)
         out.append("\n".join(contents) + "\n")
 
@@ -77,13 +82,18 @@ class Echo(Application):
 
     def exec(self, args, out, in_pipe):
         if in_pipe:
-            raise ApplicationExcecutionError("Echo Can Not Take Arguments From stdin")
+            raise ApplicationExcecutionError(
+                "Echo Can Not Take Arguments From stdin"
+                )
         out.append(" ".join(args) + "\n")
 
 
 class Head(Application):
 
-    """prints the first n (10 if n is not specified) lines of a given file or stdin"""
+    """
+    prints the first n (10 if n is not specified)
+    lines of a given file or stdin
+    """
 
     def _read_first_n_lines_from_file(self, file, n, out):
         with open(file) as f:
@@ -112,7 +122,9 @@ class Head(Application):
 
 class Tail(Application):
 
-    """prints the last n (10 if n is not specified) lines of a given file or stdin"""
+    """
+    prints the last n (10 if n is not specified) lines of a given file or stdin
+    """
 
     def _read_last_n_lines_from_file(self, file, n, out):
         with open(file) as f:
@@ -183,14 +195,16 @@ class Grep(Application):
 
 class Cut(Application):
     """
-    Cuts out sections from each line of a given file or stdin and prints the result to stdout.
+    Cuts out sections from each line of a given file
+    or stdin and prints the result to stdout.
 
     cut OPTIONS [FILE]
 
     - `OPTION` specifies the bytes to extract from each line:
         - `-b 1,2,3` extracts 1st, 2nd and 3rd bytes.
         - `-b 1-3,5-7` extracts the bytes from 1st to 3rd and from 5th to 7th.
-        - `-b -3,5-` extracts the bytes from the beginning of line to 3rd, and from 5th to the end of line.
+        - `-b -3,5-` extracts the bytes from the beginning of line to 3rd,
+                     and from 5th to the end of line.
     - `FILE` is the name of the file. If not specified, uses stdin.
     """
 
@@ -206,15 +220,18 @@ class Cut(Application):
             ):  # Single byte arg. e.g. -b n
                 result += self._single_param(line, param_section[0])
             elif len(param_section) == 2:
-                # -b -n (from first byte to nth byte) or -b n- (from nth byte to last byte)
+                # -b -n (from first byte to nth byte) or -b n-
+                # (from nth byte to last byte)
                 if param_section[0] == "-":  # Case -b -n
                     result += line[: int(param_section[1])]
                 elif param_section[1] == "-":  # Case -b n-
-                    result += str(line[int(param_section[0]) - 1 :])
+                    result += str(line[int(param_section[0]) - 1:])
                     break
             elif len(param_section) == 3 and param_section[1] == "-":
                 # -b n-m (from nth byte to mth byte)
-                result += line[int(param_section[0]) - 1 : int(param_section[2])]
+                result += line[
+                    int(param_section[0]) - 1: int(param_section[2])
+                    ]
         return result
 
     def _single_param(self, line, param):
@@ -234,7 +251,9 @@ class Cut(Application):
     def exec(self, args, out, in_pipe):
         no_of_bytes_param = args[1].split(",")
         no_of_bytes_param.sort(
-            key=lambda x: int(x.split("-")[0]) if x.split("-")[0] != "" else -ord(x[0])
+            key=lambda x: int(x.split("-")[0])
+            if x.split("-")[0] != ""
+            else -ord(x[0])
         )
         if len(args) == 2:
             if not in_pipe:
@@ -267,9 +286,13 @@ class Find(Application):
 
     def exec(self, args, out, in_pipe):
         if in_pipe:
-            raise ApplicationExcecutionError("Find Can Not Take Arguments From stdin")
+            raise ApplicationExcecutionError(
+                "Find Can Not Take Arguments From stdin"
+                )
         path, pattern = self._get_path_and_pattern(args)
-        file_names = "\n".join(glob.iglob(path + "/**/" + pattern, recursive=True))
+        file_names = "\n".join(
+            glob.iglob(path + "/**/" + pattern, recursive=True)
+            )
         out.append(file_names)
 
 
@@ -288,7 +311,10 @@ class Uniq(Application):
 
     def _prev_and_current_line_equal(self, case_insensitive, line, uniq_lines):
         if case_insensitive:
-            return len(uniq_lines) > 0 and line.lower() == uniq_lines[-1].lower()
+            return (
+                len(uniq_lines) > 0 and
+                line.lower() == uniq_lines[-1].lower()
+                )
         else:
             return len(uniq_lines) > 0 and line == uniq_lines[-1]
 
@@ -339,7 +365,8 @@ class Uniq(Application):
 
 class Sort(Application):
     """
-    Sorts the contents of a file/stdin line by line and prints the result to stdout.
+    Sorts the contents of a file/stdin line by line
+    and prints the result to stdout.
 
     sort [OPTIONS] [FILE]
 
@@ -396,7 +423,9 @@ class Clear(Application):
 
     def exec(self, args, out, in_pipe):
         if in_pipe:
-            raise ApplicationExcecutionError("Clear can not take arguments from stdin")
+            raise ApplicationExcecutionError(
+                "Clear can not take arguments from stdin"
+                )
         # Windows users -> cls
         # Mac/Linux users -> clear
         os.system("cls||clear")
@@ -408,7 +437,9 @@ class Exit(Application):
 
     def exec(self, args, out, in_pipe):
         if in_pipe:
-            raise ApplicationExcecutionError("Exit can not take arguments from stdin")
+            raise ApplicationExcecutionError(
+                "Exit can not take arguments from stdin"
+                )
         sys.exit(0)
 
 

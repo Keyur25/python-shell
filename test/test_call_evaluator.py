@@ -38,7 +38,9 @@ class TestCallEvaluator(unittest.TestCase):
         self.out = deque()
 
     def tearDown(self):
-        p = subprocess.run(["rm", "-r", "unittests"], stdout=subprocess.DEVNULL)
+        p = subprocess.run(
+            ["rm", "-r", "unittests"], stdout=subprocess.DEVNULL
+            )
         if p.returncode != 0:
             print("error: failed to remove unittests directory")
             exit(1)
@@ -75,11 +77,15 @@ class TestCallEvaluator(unittest.TestCase):
         command_substituition_visitor = CommandSubstituitionVisitor(self.out)
 
         self.assertRaises(
-            InvalidCommandSubstitution, command_substituition_visitor.visit, call_tree
+            InvalidCommandSubstitution,
+            command_substituition_visitor.visit,
+            call_tree
         )
 
     def test_redirection_visitor_input(self):
-        application, args, file_output = self._call_tree_visitor("echo < file.txt")
+        application, args, file_output = self._call_tree_visitor(
+            "echo < file.txt"
+            )
 
         self.assertEqual(application, "echo")
         self.assertEqual(len(args), 1)
@@ -87,7 +93,9 @@ class TestCallEvaluator(unittest.TestCase):
         self.assertEqual(file_output, None)
 
     def test_redirection_visitor_output(self):
-        application, args, file_output = self._call_tree_visitor("echo foo > file.txt")
+        application, args, file_output = self._call_tree_visitor(
+            "echo foo > file.txt"
+            )
 
         self.assertEqual(application, "echo")
         self.assertEqual(len(args), 1)
@@ -95,7 +103,9 @@ class TestCallEvaluator(unittest.TestCase):
         self.assertEqual(file_output, "file.txt")
 
     def test_redirection_visitor_with_single_quoted_file_name(self):
-        application, args, file_output = self._call_tree_visitor("echo < 'file.txt'")
+        application, args, file_output = self._call_tree_visitor(
+            "echo < 'file.txt'"
+            )
 
         self.assertEqual(application, "echo")
         self.assertEqual(len(args), 1)
@@ -103,7 +113,9 @@ class TestCallEvaluator(unittest.TestCase):
         self.assertEqual(file_output, None)
 
     def test_redirection_visitor_with_double_quoted_file_name(self):
-        application, args, file_output = self._call_tree_visitor('echo < "file.txt"')
+        application, args, file_output = self._call_tree_visitor(
+            'echo < "file.txt"'
+            )
 
         self.assertEqual(application, "echo")
         self.assertEqual(len(args), 1)
@@ -165,7 +177,9 @@ class TestCallEvaluator(unittest.TestCase):
         self.assertEqual(file_output, None)
 
     def test_call_visitor_with_back_quotes_nested_in_double_quotes(self):
-        application, args, file_output = self._call_tree_visitor('echo "`fizz`"')
+        application, args, file_output = self._call_tree_visitor(
+            'echo "`fizz`"'
+            )
 
         self.assertEqual(application, "echo")
         self.assertEqual(len(args), 1)
@@ -181,7 +195,9 @@ class TestCallEvaluator(unittest.TestCase):
         self.assertEqual(file_output, None)
 
     def test_call_with_two_arguments_containing_no_quotes(self):
-        application, args, file_output = self._call_tree_visitor("echo foo bar")
+        application, args, file_output = self._call_tree_visitor(
+            "echo foo bar"
+            )
 
         self.assertEqual(application, "echo")
         self.assertEqual(len(args), 2)
@@ -190,7 +206,9 @@ class TestCallEvaluator(unittest.TestCase):
         self.assertEqual(file_output, None)
 
     def test_call_with_argument_containing_quotes_with_spaces(self):
-        application, args, file_output = self._call_tree_visitor('echo "foo bar"')
+        application, args, file_output = self._call_tree_visitor(
+            'echo "foo bar"'
+            )
 
         self.assertEqual(application, "echo")
         self.assertEqual(len(args), 1)
@@ -206,7 +224,9 @@ class TestCallEvaluator(unittest.TestCase):
         self.assertEqual(file_output, None)
 
     def test_call_with_argument_containing_quoted_asterisk(self):
-        application, args, file_output = self._call_tree_visitor('echo "*.txt"')
+        application, args, file_output = self._call_tree_visitor(
+            'echo "*.txt"'
+            )
 
         self.assertEqual(application, "echo")
         self.assertEqual(len(args), 1)
@@ -214,14 +234,22 @@ class TestCallEvaluator(unittest.TestCase):
         self.assertEqual(file_output, None)
 
     def test_argument_with_globbing(self):
-        application, args, file_output = self._call_tree_visitor('echo unittests/*.txt')
+        application, args, file_output = self._call_tree_visitor(
+            'echo unittests/*.txt'
+            )
         self.assertEqual(application, "echo")
-        self.assertEqual(len(args), 1) 
+        self.assertEqual(len(args), 1)
 
         res = args[0].split(' ')
         res.sort()
-        
-        self.assertListEqual(res, ["unittests/test1.txt", "unittests/test2.txt", "unittests/test3.txt"])
+
+        self.assertListEqual(
+            res, [
+                "unittests/test1.txt",
+                "unittests/test2.txt",
+                "unittests/test3.txt"
+                ]
+                )
         self.assertEqual(file_output, None)
 
     def test_argument_with_unquoted_asterisk_and_globbing_equal_to_false(self):
@@ -249,7 +277,9 @@ class TestCallEvaluator(unittest.TestCase):
         self.assertEqual(file_output, None)
 
     def test_call_with_prefix_redirection(self):
-        application, args, file_output = self._call_tree_visitor("< file.txt echo")
+        application, args, file_output = self._call_tree_visitor(
+            "< file.txt echo"
+            )
 
         self.assertEqual(application, "echo")
         self.assertEqual(len(args), 1)
@@ -257,7 +287,9 @@ class TestCallEvaluator(unittest.TestCase):
         self.assertEqual(file_output, None)
 
     def test_invalid_call(self):
-        self.assertEqual(self.parser.call_level_parse("echo AAA >> file.txt"), False)
+        self.assertEqual(
+            self.parser.call_level_parse("echo AAA >> file.txt"), False
+            )
 
 
 if __name__ == "__main__":

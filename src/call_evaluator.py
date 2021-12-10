@@ -1,6 +1,6 @@
 from glob import glob
 from lark.visitors import Visitor_Recursive
-from lark import Tree, Token
+from lark import Token
 from parser import Parser
 from exceptions import InvalidCommandSubstitution
 
@@ -39,10 +39,13 @@ class CommandSubstituitionVisitor(Visitor_Recursive):
 
     def backquoted(self, tree):
         """
-        If the call contains a backquote, we evaluate and replace the backquoted
+        If the call contains a backquote,
+        we evaluate and replace the backquoted
         argument with the results in out.
         """
-        no_of_outputs = self._eval_command_substituition(tree.children[0], self.out)
+        no_of_outputs = self._eval_command_substituition(
+            tree.children[0], self.out
+            )
         if not no_of_outputs:
             raise InvalidCommandSubstitution(
                 "Invalid Command Substitution: " + str(tree.children[0])
@@ -51,7 +54,8 @@ class CommandSubstituitionVisitor(Visitor_Recursive):
         for _ in range(no_of_outputs):  # get correct no. of outputs from out
             res.append(self.out.pop().replace("\n", " ").strip())
         res.reverse()
-        tree.children[0] = " ".join(res)  # replace backquoted command with outputs
+        # replace backquoted command with outputs
+        tree.children[0] = " ".join(res)
 
 
 class RedirectionVisitor(Visitor_Recursive):
@@ -199,7 +203,10 @@ class CallTreeVisitor(Visitor_Recursive):
     def call(self, tree):
         for child in tree.children:
             if child.data == "argument":
-                # an argument which is a child of a call will always contain the application.
+                """
+                an argument which is a child of a call
+                will always contain the application.
+                """
                 self._application(child)
             elif child.data == "redirection":
                 self._redirection(child)

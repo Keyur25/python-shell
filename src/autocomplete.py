@@ -2,29 +2,30 @@
 from os import getcwd, listdir, path
 import readline
 APPLICATIONS = {
-    "pwd":"",
-    "cd":"",
-    "echo":"",
-    "ls":"",
-    "cat":"",
-    "head":"-n",
-    "tail":"-n",
-    "grep":"",
-    "clear":"",
-    "exit":"",
-    "uniq":"-i",
-    "find":"",
-    "sort":"-r",
-    "cut":"-b",
+    "pwd": "",
+    "cd": "",
+    "echo": "",
+    "ls": "",
+    "cat": "",
+    "head": "-n",
+    "tail": "-n",
+    "grep": "",
+    "clear": "",
+    "exit": "",
+    "uniq": "-i",
+    "find": "",
+    "sort": "-r",
+    "cut": "-b",
 }
+
 
 class Completer():  # Custom completer
     """
     Auto completer class
     """
     def __init__(self, options):
-        self.options = sorted(options) # List of items to check against
-        self.matches = None # List of matched strings (if duplicate)
+        self.options = sorted(options)  # List of items to check against
+        self.matches = None  # List of matched strings (if duplicate)
 
     def set_options(self, opt):
         """
@@ -77,7 +78,7 @@ class Completer():  # Custom completer
         self.set_options_to_files_and_folders(ls_dir)
         res = self.completes(text, state)
         # If autocomplete text is path add a '/' to distinguish
-        if res != None and path.isdir(ls_dir + '/' + res + '/'):
+        if res is not None and path.isdir(ls_dir + '/' + res + '/'):
             return res + '/'
         return res
 
@@ -87,15 +88,19 @@ class Completer():  # Custom completer
         in the order: application, flag, directory.
         Then returns filtered result and prints to terminal
         """
-        
-        if current == None: current = readline.get_line_buffer()
+
+        if current is None:
+            current = readline.get_line_buffer()
         current_text = current.split(" ")
         if len(current_text) == 1 or current_text[-2] in ['|', ';', '`']:
             return self.autocomplete_application(text, state)
         elif current_text[-1] == '-':  # It is a flag argument
             return self.autocomplete_flag(current_text, text, state)
         else:
-            return self.autocomplete_files_and_folders(current_text, text, state)
+            return self.autocomplete_files_and_folders(
+                current_text, text, state
+                )
+
 
 # Initialise the options to applications domain at first run.
 completer = Completer(APPLICATIONS.keys())

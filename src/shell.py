@@ -1,13 +1,10 @@
-import re
 import sys
 import os
 from parser import Parser
 from collections import deque
-from glob import glob
-from applications import *
 from command_evaluator import extract_raw_commands
-import autocomplete
 from commands import Seq
+
 
 def eval(cmdline, out):
     parser = Parser()
@@ -18,6 +15,7 @@ def eval(cmdline, out):
     raw_commands = extract_raw_commands(command_tree)
     seq = Seq(raw_commands)
     seq.eval(out)
+
 
 if __name__ == "__main__":
     args_num = len(sys.argv) - 1  # number of args excluding script name
@@ -38,4 +36,3 @@ if __name__ == "__main__":
             eval(cmdline, out)
             while len(out) > 0:
                 print(out.popleft(), end="")
-                

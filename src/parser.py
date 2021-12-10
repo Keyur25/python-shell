@@ -1,19 +1,30 @@
 from lark import Lark, UnexpectedCharacters, UnexpectedEOF
 from pathlib import Path
 
+
 class Parser:
     def __init__(self):
-        self.command_level_parser = Lark(self._get_command_level_grammar(), start="command")
-        self.call_command_parser = Lark(self._get_call_command_grammar(), start="call")
+        self.command_level_parser = Lark(
+            self._command_level_grammar(), start="command"
+            )
+        self.call_command_parser = Lark(
+            self._call_level_grammar(), start="call"
+            )
 
-    def _get_command_level_grammar(self):
-        file = open(str(Path(__file__).parent.absolute()) + "/grammars/command_level_grammar.lark", "r")
+    def _command_level_grammar(self):
+        file = open(
+            str(Path(__file__).parent.absolute()) +
+            "/grammars/command_level_grammar.lark", "r"
+            )
         grammar = file.read()
         file.close()
         return grammar
 
-    def _get_call_command_grammar(self):
-        file = open(str(Path(__file__).parent.absolute()) + "/grammars/call_level_grammar.lark", "r")
+    def _call_level_grammar(self):
+        file = open(
+            str(Path(__file__).parent.absolute()) +
+            "/grammars/call_level_grammar.lark", "r"
+            )
         grammar = file.read()
         file.close()
         return grammar

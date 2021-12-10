@@ -1,25 +1,7 @@
 import subprocess
 import unittest
 from collections import deque
-import os
-import re
-
-# from hypothesis import example, given, strategies as st
-# export PYTHONPATH="./src"
 from shell import eval as shell_evaluator
-import applications as app
-from commands import Call, Pipe, Seq
-from parser import Parser
-from command_evaluator import extract_raw_commands
-from collections import deque
-
-from call_evaluator import CommandSubstituitionVisitor, CallTreeVisitor, InvalidCommandSubstitution
-
-
-# TODO: Search up mutant testing
-# TODO: research hypothesis libary for Python
-#! We can use hypothesis-> See Q&A Lab For Wed Nov 17 -> 42:00
-#! Use property based testing -> Using advanced librarys +3 and good reflection +2 on report
 
 
 class TestShell(unittest.TestCase):
@@ -52,11 +34,13 @@ class TestShell(unittest.TestCase):
         self.out = deque()
 
     def tearDown(self):
-        p = subprocess.run(["rm", "-r", "unittests"], stdout=subprocess.DEVNULL)
+        p = subprocess.run(
+            ["rm", "-r", "unittests"], stdout=subprocess.DEVNULL
+            )
         if p.returncode != 0:
             print("error: failed to remove unittests directory")
             exit(1)
-    
+
     def test_eval(self):
         out = deque()
         shell_evaluator("echo foo", out)
@@ -69,8 +53,6 @@ class TestShell(unittest.TestCase):
         self.assertEqual(out.popleft(), "Unrecognized Input: echo '''\n")
         self.assertEqual(len(out), 0)
 
-      
-      
+
 if __name__ == "__main__":
     unittest.main()
-    

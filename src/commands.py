@@ -97,8 +97,8 @@ class Pipe(Command):
 
     def eval(self, out):
         """
-        For every command in a pipe, excluding the first, we take input from out
-        as args by passing in in_pipe as true when evaluating each call
+        For every command in a pipe, excluding the first, we take input from
+        out as args by passing in in_pipe as true when evaluating each call
         """
         first_call = True
         for call in self:

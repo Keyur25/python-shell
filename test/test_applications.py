@@ -22,10 +22,12 @@ class TestPwd(unittest.TestCase):
         pwd.exec([], self.out, False)
         self.assertEqual(len(self.out), 1)
         self.assertEqual(self.out.pop().strip(), os.getcwd())
-    
+
     def test_pwd_in_pipe(self):
         pwd = app.Pwd()
-        self.assertRaises(app.ApplicationExcecutionError, pwd.exec, [], self.out, True)
+        self.assertRaises(
+            app.ApplicationExcecutionError, pwd.exec, [], self.out, True
+            )
 
 
 class TestCd(unittest.TestCase):
@@ -55,24 +57,34 @@ class TestCd(unittest.TestCase):
         self.out = deque()
 
     def tearDown(self):
-        p = subprocess.run(["rm", "-r", "unittests"], stdout=subprocess.DEVNULL)
+        p = subprocess.run(
+            ["rm", "-r", "unittests"], stdout=subprocess.DEVNULL
+            )
         if p.returncode != 0:
             print("error: failed to remove unittests directory")
             exit(1)
 
     def test_cd_no_args(self):
         cd = app.Cd()
-        self.assertRaises(app.ApplicationExcecutionError, cd.exec, [], self.out, False)
+        self.assertRaises(
+            app.ApplicationExcecutionError, cd.exec, [], self.out, False
+            )
 
     def test_cd_multiple_args(self):
         cd = app.Cd()
         self.assertRaises(
-            app.ApplicationExcecutionError, cd.exec, ["dir1", "dir2"], self.out, False
+            app.ApplicationExcecutionError,
+            cd.exec,
+            ["dir1", "dir2"],
+            self.out,
+            False
         )
 
     def test_cd_fake_directory(self):
         cd = app.Cd()
-        self.assertRaises(FileNotFoundError, cd.exec, ["dir3"], self.out, False)
+        self.assertRaises(
+            FileNotFoundError, cd.exec, ["dir3"], self.out, False
+            )
 
     def test_cd(self):
         cd = app.Cd()
@@ -84,7 +96,9 @@ class TestCd(unittest.TestCase):
 
     def test_cd_in_pipe(self):
         cd = app.Cd()
-        self.assertRaises(app.ApplicationExcecutionError, cd.exec, [], self.out, True)
+        self.assertRaises(
+            app.ApplicationExcecutionError, cd.exec, [], self.out, True
+            )
 
 
 class TestLs(unittest.TestCase):
@@ -119,7 +133,9 @@ class TestLs(unittest.TestCase):
         self.out = deque()
 
     def tearDown(self):
-        p = subprocess.run(["rm", "-r", "unittests"], stdout=subprocess.DEVNULL)
+        p = subprocess.run(
+            ["rm", "-r", "unittests"], stdout=subprocess.DEVNULL
+            )
         if p.returncode != 0:
             print("error: failed to remove unittests directory")
             exit(1)
@@ -140,7 +156,9 @@ class TestLs(unittest.TestCase):
 
     def test_ls_invalid_arg(self):
         ls = app.Ls()
-        self.assertRaises(FileNotFoundError, ls.exec, ["dir3"], self.out, False)
+        self.assertRaises(
+            FileNotFoundError, ls.exec, ["dir3"], self.out, False
+            )
 
     def test_ls_hidden_file(self):
         ls = app.Ls()
@@ -163,7 +181,9 @@ class TestLs(unittest.TestCase):
 
     def test_ls_in_pipe(self):
         ls = app.Ls()
-        self.assertRaises(app.ApplicationExcecutionError, ls.exec, [], self.out, True)
+        self.assertRaises(
+            app.ApplicationExcecutionError, ls.exec, [], self.out, True
+            )
 
 
 class TestCat(unittest.TestCase):
@@ -198,14 +218,18 @@ class TestCat(unittest.TestCase):
         self.out = deque()
 
     def tearDown(self):
-        p = subprocess.run(["rm", "-r", "unittests"], stdout=subprocess.DEVNULL)
+        p = subprocess.run(
+            ["rm", "-r", "unittests"], stdout=subprocess.DEVNULL
+            )
         if p.returncode != 0:
             print("error: failed to remove unittests directory")
             exit(1)
 
     def test_cat_no_args(self):
         cat = app.Cat()
-        self.assertRaises(app.ApplicationExcecutionError, cat.exec, [], self.out, False)
+        self.assertRaises(
+            app.ApplicationExcecutionError, cat.exec, [], self.out, False
+            )
 
     def test_cat_stdin(self):
         self.out.append("unittests/test2.txt")
@@ -225,15 +249,21 @@ class TestCat(unittest.TestCase):
 
     def test_cat_invalid_folder(self):
         cat = app.Cat()
-        self.assertRaises(FileNotFoundError, cat.exec, ["dir5"], self.out, False)
+        self.assertRaises(
+            FileNotFoundError, cat.exec, ["dir5"], self.out, False
+            )
 
     def test_cat_valid_folder(self):
         cat = app.Cat()
-        self.assertRaises(FileNotFoundError, cat.exec, ["dir1"], self.out, False)
+        self.assertRaises(
+            FileNotFoundError, cat.exec, ["dir1"], self.out, False
+            )
 
     def test_cat_two_files(self):
         cat = app.Cat()
-        cat.exec(["unittests/test1.txt", "unittests/test2.txt"], self.out, False)
+        cat.exec(
+            ["unittests/test1.txt", "unittests/test2.txt"], self.out, False
+            )
         self.assertEqual(len(self.out), 1)
         self.assertEqual(
             self.out.pop(),
@@ -274,7 +304,9 @@ class TestEcho(unittest.TestCase):
 
     def test_echo_in_pipe(self):
         echo = app.Echo()
-        self.assertRaises(app.ApplicationExcecutionError, echo.exec, [], self.out, True)
+        self.assertRaises(
+            app.ApplicationExcecutionError, echo.exec, [], self.out, True
+            )
 
 
 class TestHead(unittest.TestCase):
@@ -303,7 +335,9 @@ class TestHead(unittest.TestCase):
         self.out = deque()
 
     def tearDown(self):
-        p = subprocess.run(["rm", "-r", "unittests"], stdout=subprocess.DEVNULL)
+        p = subprocess.run(
+            ["rm", "-r", "unittests"], stdout=subprocess.DEVNULL
+            )
         if p.returncode != 0:
             print("error: failed to remove unittests directory")
             exit(1)
@@ -320,19 +354,25 @@ class TestHead(unittest.TestCase):
 
     def test_head_read_first_n_lines_from_file_n_is_zero(self):
         head = app.Head()
-        head._read_first_n_lines_from_file("unittests/alphabet.txt", 0, self.out)
+        head._read_first_n_lines_from_file(
+            "unittests/alphabet.txt", 0, self.out
+            )
         self.assertEqual(len(self.out), 1)
         self.assertEqual(self.out.pop().strip(), "")
 
     def test_head_read_first_n_lines_from_file_n_is_negative(self):
         head = app.Head()
-        head._read_first_n_lines_from_file("unittests/alphabet.txt", -2, self.out)
+        head._read_first_n_lines_from_file(
+            "unittests/alphabet.txt", -2, self.out
+            )
         self.assertEqual(len(self.out), 1)
         self.assertEqual(self.out.pop().strip(), "")
 
     def test_head_read_first_n_lines_from_file(self):
         head = app.Head()
-        head._read_first_n_lines_from_file("unittests/alphabet.txt", 5, self.out)
+        head._read_first_n_lines_from_file(
+            "unittests/alphabet.txt", 5, self.out
+            )
         self.assertEqual(len(self.out), 1)
         self.assertListEqual(
             self.out.pop().split(),
@@ -439,7 +479,9 @@ class TestTail(unittest.TestCase):
         self.out = deque()
 
     def tearDown(self):
-        p = subprocess.run(["rm", "-r", "unittests"], stdout=subprocess.DEVNULL)
+        p = subprocess.run(
+            ["rm", "-r", "unittests"], stdout=subprocess.DEVNULL
+            )
         if p.returncode != 0:
             print("error: failed to remove unittests directory")
             exit(1)
@@ -456,19 +498,25 @@ class TestTail(unittest.TestCase):
 
     def test_tail_read_last_n_lines_from_file_n_is_zero(self):
         tail = app.Tail()
-        tail._read_last_n_lines_from_file("unittests/alphabet.txt", 0, self.out)
+        tail._read_last_n_lines_from_file(
+            "unittests/alphabet.txt", 0, self.out
+            )
         self.assertEqual(len(self.out), 1)
         self.assertEqual(self.out.pop().strip(), "")
 
     def test_tail_read_last_n_lines_from_file_n_is_negative(self):
         tail = app.Tail()
-        tail._read_last_n_lines_from_file("unittests/alphabet.txt", -2, self.out)
+        tail._read_last_n_lines_from_file(
+            "unittests/alphabet.txt", -2, self.out
+            )
         self.assertEqual(len(self.out), 1)
         self.assertEqual(self.out.pop().strip(), "")
 
     def test_tail_read_last_n_lines_from_file(self):
         tail = app.Tail()
-        tail._read_last_n_lines_from_file("unittests/alphabet.txt", 5, self.out)
+        tail._read_last_n_lines_from_file(
+            "unittests/alphabet.txt", 5, self.out
+            )
         self.assertEqual(len(self.out), 1)
         self.assertListEqual(
             self.out.pop().split(),
@@ -577,7 +625,9 @@ class TestGrep(unittest.TestCase):
         self.out = deque()
 
     def tearDown(self):
-        p = subprocess.run(["rm", "-r", "unittests"], stdout=subprocess.DEVNULL)
+        p = subprocess.run(
+            ["rm", "-r", "unittests"], stdout=subprocess.DEVNULL
+            )
         if p.returncode != 0:
             print("error: failed to remove unittests directory")
             exit(1)
@@ -698,7 +748,9 @@ class TestGrep(unittest.TestCase):
         in_pipe = False
         grep.exec(args, self.out, in_pipe)
         self.assertEqual(len(self.out), 1)
-        self.assertListEqual(self.out.pop().split("\n"), ["unittests/test2.txt:BBB"])
+        self.assertListEqual(
+            self.out.pop().split("\n"), ["unittests/test2.txt:BBB"]
+            )
 
 
 class TestCut(unittest.TestCase):
@@ -727,7 +779,9 @@ class TestCut(unittest.TestCase):
         self.out = deque()
 
     def tearDown(self):
-        p = subprocess.run(["rm", "-r", "unittests"], stdout=subprocess.DEVNULL)
+        p = subprocess.run(
+            ["rm", "-r", "unittests"], stdout=subprocess.DEVNULL
+            )
         if p.returncode != 0:
             print("error: failed to remove unittests directory")
             exit(1)
@@ -779,7 +833,9 @@ class TestCut(unittest.TestCase):
         args = ["-b", "19-38", "unittests/test1.txt"]
         cut.exec(args, self.out, False)
         res = self.out.pop().splitlines()
-        self.assertCountEqual(res, ["then they had a book", "it wanted to asjdian"])
+        self.assertCountEqual(
+            res, ["then they had a book", "it wanted to asjdian"]
+            )
 
     def test_cut_pipe(self):
         cut = app.Cut()
@@ -830,7 +886,9 @@ class TestFind(unittest.TestCase):
         self.out = deque()
 
     def tearDown(self):
-        p = subprocess.run(["rm", "-r", "unittests"], stdout=subprocess.DEVNULL)
+        p = subprocess.run(
+            ["rm", "-r", "unittests"], stdout=subprocess.DEVNULL
+            )
         if p.returncode != 0:
             print("error: failed to remove unittests directory")
             exit(1)
@@ -867,7 +925,9 @@ class TestFind(unittest.TestCase):
 
     def test_find_get_path_and_pattern_three_args(self):
         find = app.Find()
-        path, pattern = find._get_path_and_pattern(["path", "-name", "pattern"])
+        path, pattern = find._get_path_and_pattern(
+            ["path", "-name", "pattern"]
+            )
         self.assertEqual(path, "path")
         self.assertEqual(pattern, "pattern")
 
@@ -900,7 +960,9 @@ class TestFind(unittest.TestCase):
 
     def test_find_in_pipe(self):
         find = app.Find()
-        self.assertRaises(app.ApplicationExcecutionError, find.exec, [], self.out, True)
+        self.assertRaises(
+            app.ApplicationExcecutionError, find.exec, [], self.out, True
+            )
 
 
 class TestUniq(unittest.TestCase):
@@ -929,7 +991,9 @@ class TestUniq(unittest.TestCase):
         self.out = deque()
 
     def tearDown(self):
-        p = subprocess.run(["rm", "-r", "unittests"], stdout=subprocess.DEVNULL)
+        p = subprocess.run(
+            ["rm", "-r", "unittests"], stdout=subprocess.DEVNULL
+            )
         if p.returncode != 0:
             print("error: failed to remove unittests directory")
             exit(1)
@@ -1000,7 +1064,6 @@ class TestUniq(unittest.TestCase):
         )
 
 
-
 class TestSort(unittest.TestCase):
     @classmethod
     def prepare(cls, cmdline):
@@ -1028,7 +1091,9 @@ class TestSort(unittest.TestCase):
         self.out = deque()
 
     def tearDown(self):
-        p = subprocess.run(["rm", "-r", "unittests"], stdout=subprocess.DEVNULL)
+        p = subprocess.run(
+            ["rm", "-r", "unittests"], stdout=subprocess.DEVNULL
+            )
         if p.returncode != 0:
             print("error: failed to remove unittests directory")
             exit(1)
@@ -1040,7 +1105,9 @@ class TestSort(unittest.TestCase):
 
     def test_sort_sort_contents_reverse(self):
         sort = app.Sort()
-        sort._sort_contents(["c", "o", "n", "t", "e", "n", "t", "s"], self.out, True)
+        sort._sort_contents(
+            ["c", "o", "n", "t", "e", "n", "t", "s"], self.out, True
+            )
         self.assertEqual(len(self.out), 1)
         self.assertEqual(self.out.pop().strip(), "ttsonnec")
 
@@ -1179,6 +1246,7 @@ class TestSort(unittest.TestCase):
             ],
         )
 
+
 class TestUnsafeDecorator(unittest.TestCase):
 
     def setUp(self):
@@ -1190,27 +1258,35 @@ class TestUnsafeDecorator(unittest.TestCase):
         call.args = ["bar"]
         app.execute_application(call, self.out, False)
         self.assertEqual(len(self.out), 1)
-        self.assertEqual(self.out.pop().strip(), "Unsupported Application: foo")
+        self.assertEqual(
+            self.out.pop().strip(), "Unsupported Application: foo"
+            )
 
     def test_os_error(self):
-        cat = app.UnsafeDecorator(app.application_factory("cat"), Call("cat foo.txt"))
+        cat = app.UnsafeDecorator(
+            app.application_factory("cat"), Call("cat foo.txt")
+            )
         cat.exec(["foo.txt"], self.out, False)
         self.assertEqual(len(self.out), 1)
         self.assertEqual(self.out.pop().strip(), "OS Error: cat foo.txt")
 
     def test_application_error(self):
-        pwd = app.UnsafeDecorator(app.application_factory("pwd"), Call("pwd foo"))
+        pwd = app.UnsafeDecorator(
+            app.application_factory("pwd"), Call("pwd foo")
+            )
         pwd.exec(["foo"], self.out, False)
         self.assertEqual(len(self.out), 1)
-        self.assertEqual(self.out.pop().strip(), "Pwd Takes No Arguments: pwd foo")
-    
+        self.assertEqual(
+            self.out.pop().strip(), "Pwd Takes No Arguments: pwd foo"
+            )
+
     def test_index_error(self):
         cat = app.UnsafeDecorator(app.application_factory("cat"), Call("_cat"))
         cat.exec([], self.out, True)
 
         self.assertEqual(len(self.out), 1)
         self.assertEqual(self.out.pop().strip(), "Index Error: _cat")
-    
+
 
 class TestFileOutput(unittest.TestCase):
 
@@ -1232,11 +1308,12 @@ class TestFileOutput(unittest.TestCase):
 
         with open("unittests/bar.txt") as f:
             lines = f.readlines()
-        
         self.assertEqual(lines, ["foo\n"])
 
     def tearDown(self):
-        p = subprocess.run(["rm", "-r", "unittests"], stdout=subprocess.DEVNULL)
+        p = subprocess.run(
+            ["rm", "-r", "unittests"], stdout=subprocess.DEVNULL
+            )
         if p.returncode != 0:
             print("error: failed to remove unittests directory")
             exit(1)

@@ -1,7 +1,8 @@
 import unittest
 from parser import Parser
 from command_evaluator import extract_raw_commands
-from commands import Call, Pipe, Seq
+from commands import Call, Pipe
+
 
 class TestCommandEvaluator(unittest.TestCase):
     def setUp(self):
@@ -21,7 +22,7 @@ class TestCommandEvaluator(unittest.TestCase):
         self.assertEqual(type(raw_commands[0].rhs()), Call)
         self.assertEqual(raw_commands[0].lhs().raw_command.strip(), "echo foo")
         self.assertEqual(raw_commands[0].rhs().raw_command.strip(), "echo")
-    
+
     def test_extract_quoted_content_with_content_between_quotes(self):
         raw_commands = self._get_raw_commands("'foo'")
 
@@ -35,7 +36,7 @@ class TestCommandEvaluator(unittest.TestCase):
         self.assertEqual(len(raw_commands), 1)
         self.assertEqual(type(raw_commands[0]), Call)
         self.assertEqual(raw_commands[0].raw_command, "''")
-    
+
     def test_double_quotes(self):
         raw_commands = self._get_raw_commands('"bar"')
 
@@ -55,21 +56,22 @@ class TestCommandEvaluator(unittest.TestCase):
 
         self.assertEqual(len(raw_commands), 1)
         self.assertEqual(type(raw_commands[0]), Call)
-        self.assertEqual(raw_commands[0].raw_command, "'bar'") 
+        self.assertEqual(raw_commands[0].raw_command, "'bar'")
 
     def test_quoted_with_backquotes(self):
         raw_commands = self._get_raw_commands("`echo foo`")
 
         self.assertEqual(len(raw_commands), 1)
         self.assertEqual(type(raw_commands[0]), Call)
-        self.assertEqual(raw_commands[0].raw_command, "`echo foo`") 
-    
+        self.assertEqual(raw_commands[0].raw_command, "`echo foo`")
+
     def test_call_with_no_quotes(self):
         raw_commands = self._get_raw_commands("echo bar")
 
         self.assertEqual(len(raw_commands), 1)
         self.assertEqual(type(raw_commands[0]), Call)
-        self.assertEqual(raw_commands[0].raw_command, "echo bar") 
+        self.assertEqual(raw_commands[0].raw_command, "echo bar")
+
 
 if __name__ == "__main__":
     unittest.main()
