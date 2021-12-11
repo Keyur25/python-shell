@@ -20,10 +20,13 @@ class TestShell(unittest.TestCase):
         if p.returncode != 0:
             print("error: failed to create unittest directory")
             exit(1)
+        self.text = ('abcdef had a dog, then they had a book \n'
+                     ' When it asdtnnasn it wanted to asjdiansdnainsd it'
+                     ' siansdinanis')
         filesystem_setup = ";".join(
             [
                 "cd unittests",
-                "echo 'abcdef had a dog, then they had a book \n When it asdtnnasn it wanted to asjdiansdnainsd it siansdinanis' > test1.txt",
+                "echo '' > test1.txt",
                 "echo BBB > test2.txt",
                 "echo CCC > test3.txt",
                 "mkdir dir1",

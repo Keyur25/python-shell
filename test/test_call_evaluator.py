@@ -132,7 +132,7 @@ class TestCallEvaluator(unittest.TestCase):
         self.assertEqual(args[0], "echo file.txt")
         self.assertEqual(file_output, None)
 
-    def test_redirection_visitor_with_nested_back_quoted_file_name_in_double_quotes(
+    def test_redirection_visitor_with_nested_back_quoted_file_in_double_quotes(
         self,
     ):
         application, args, file_output = self._call_tree_visitor(

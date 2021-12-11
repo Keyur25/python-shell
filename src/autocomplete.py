@@ -35,12 +35,13 @@ class Completer():  # Custom completer
 
     def completes(self, text, state):
         """
-        Referenced from: https://stackoverflow.com/questions/7821661/how-to-write-code-to-autocomplete-words-and-sentences
+        Referenced from: https://bit.ly/3ICwH1b
         By users: @Shaw Chin and @chiffa
         """
         if state == 0:  # on first trigger, build possible matches
             if text:  # cache matches (entries that start with entered text)
-                self.matches = [o for o in self.options if o and o.startswith(text)]
+                self.matches = [o for o in self.options
+                                if o and o.startswith(text)]
             else:  # no text entered, all matches possible
                 self.matches = self.options[:]
         # return match indexed by state

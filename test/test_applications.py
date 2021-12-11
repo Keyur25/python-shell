@@ -325,10 +325,12 @@ class TestHead(unittest.TestCase):
         if p.returncode != 0:
             print("error: failed to create unittest directory")
             exit(1)
+        self.alphabet = ('a\nb\nc\nd\ne\nf\ng\nh\ni\nj\nk\nl\nm\n'
+                         'n\no\np\nq\nr\ns\nt\nu\nv\nw\nx\ny\nz')
         filesystem_setup = ";".join(
             [
                 "cd unittests",
-                "echo 'a\nb\nc\nd\ne\nf\ng\nh\ni\nj\nk\nl\nm\nn\no\np\nq\nr\ns\nt\nu\nv\nw\nx\ny\nz' > alphabet.txt",
+                f"echo '{self.alphabet}' > alphabet.txt",
             ]
         )
         self.prepare(filesystem_setup)
@@ -431,7 +433,7 @@ class TestHead(unittest.TestCase):
         self.assertEqual(len(self.out), 1)
         self.assertListEqual(
             self.out.pop().split(),
-            "a\nb\nc\nd\ne\nf\ng\nh\ni\nj\nk\nl\nm\nn\no\np\nq\nr\ns\nt\nu\nv\nw\nx\ny\nz".split(),
+            self.alphabet.split(),
         )
 
     def test_head_n_flag(self):
@@ -469,10 +471,13 @@ class TestTail(unittest.TestCase):
         if p.returncode != 0:
             print("error: failed to create unittest directory")
             exit(1)
+        self.alphabet = ('a\nb\nc\nd\ne\nf\ng\nh\ni\nj\nk\nl\nm\n'
+                         'n\no\np\nq\nr\ns\nt\nu\nv\nw\nx\ny\nz')
+
         filesystem_setup = ";".join(
             [
                 "cd unittests",
-                "echo 'a\nb\nc\nd\ne\nf\ng\nh\ni\nj\nk\nl\nm\nn\no\np\nq\nr\ns\nt\nu\nv\nw\nx\ny\nz' > alphabet.txt",
+                f"echo '{self.alphabet}' > alphabet.txt",
             ]
         )
         self.prepare(filesystem_setup)
@@ -575,7 +580,7 @@ class TestTail(unittest.TestCase):
         self.assertEqual(len(self.out), 1)
         self.assertListEqual(
             self.out.pop().split(),
-            "a\nb\nc\nd\ne\nf\ng\nh\ni\nj\nk\nl\nm\nn\no\np\nq\nr\ns\nt\nu\nv\nw\nx\ny\nz".split(),
+            self.alphabet.split(),
         )
 
     def test_tail_n_flag(self):
@@ -769,10 +774,13 @@ class TestCut(unittest.TestCase):
         if p.returncode != 0:
             print("error: failed to create unittest directory")
             exit(1)
+        self.test1 = ('abcdef had a dog, then they had a book \n'
+                      'When it asdtnnasn it wanted to asjdiansdnainsd'
+                      ' it siansdinanis')
         filesystem_setup = ";".join(
             [
                 "cd unittests",
-                "echo 'abcdef had a dog, then they had a book \n When it asdtnnasn it wanted to asjdiansdnainsd it siansdinanis' > test1.txt",
+                f"echo '{self.test1}' > test1.txt",
             ]
         )
         self.prepare(filesystem_setup)
@@ -869,13 +877,15 @@ class TestFind(unittest.TestCase):
         if p.returncode != 0:
             print("error: failed to create unittest directory")
             exit(1)
+        self.alphabet = ('a\nb\nc\nd\ne\nf\ng\nh\ni\nj\nk\nl\nm\n'
+                         'n\no\np\nq\nr\ns\nt\nu\nv\nw\nx\ny\nz')
         filesystem_setup = ";".join(
             [
                 "cd unittests",
                 "echo AAA > test1.txt",
                 "echo BBB > test2.txt",
                 "echo CCC > test3.txt",
-                "echo 'a\nb\nc\nd\ne\nf\ng\nh\ni\nj\nk\nl\nm\nn\no\np\nq\nr\ns\nt\nu\nv\nw\nx\ny\nz' > alphabet.txt",
+                f"echo {self.alphabet} > alphabet.txt",
                 "mkdir dir1",
                 "echo DDD > dir1/.test3.txt",
                 "echo HELLO > dir1/hello.txt",
@@ -981,10 +991,12 @@ class TestUniq(unittest.TestCase):
         if p.returncode != 0:
             print("error: failed to create unittest directory")
             exit(1)
+        self.text1 = ('HELLO\nhello\nhello\nhello\nhello\n'
+                      'Hello\nHEllo\nHeLlo\nHeLLo\nhello\nhEllO\nhElLo')
         filesystem_setup = ";".join(
             [
                 "cd unittests",
-                "echo 'HELLO\nhello\nhello\nhello\nhello\nHello\nHEllo\nHeLlo\nHeLLo\nhello\nhEllO\nhElLo' > hello.txt",
+                f"echo '{self.text1}' > hello.txt",
             ]
         )
         self.prepare(filesystem_setup)
@@ -1030,7 +1042,8 @@ class TestUniq(unittest.TestCase):
         uniq.exec(args, self.out, False)
         res = self.out.pop()
         self.assertEqual(
-            res, "HELLO\nhello\nHello\nHEllo\nHeLlo\nHeLLo\nhello\nhEllO\nhElLo\n"
+            res, ('HELLO\nhello\nHello\nHEllo\nHeLlo\nHeLLo\nhello'
+                  '\nhEllO\nhElLo\n')
         )
 
     def test_uniq_file_case_insensitive(self):
@@ -1080,11 +1093,16 @@ class TestSort(unittest.TestCase):
         if p.returncode != 0:
             print("error: failed to create unittest directory")
             exit(1)
+        self.test1 = ('abcdef had a dog, then they had a book\n '
+                      'When it asdtnnasn it wanted to asjdiansdnainsd'
+                      ' it siansdinanis')
+        self.alphabet = ('a\nb\nc\nd\ne\nf\ng\nh\ni\nj\nk\nl\nm\n'
+                         'n\no\np\nq\nr\ns\nt\nu\nv\nw\nx\ny\nz')
         filesystem_setup = ";".join(
             [
                 "cd unittests",
-                "echo 'abcdef had a dog, then they had a book \n When it asdtnnasn it wanted to asjdiansdnainsd it siansdinanis' > test1.txt",
-                "echo 'a\nb\nc\nd\ne\nf\ng\nh\ni\nj\nk\nl\nm\nn\no\np\nq\nr\ns\nt\nu\nv\nw\nx\ny\nz' > alphabet.txt",
+                f"echo '{self.test1}' > test1.txt",
+                f"echo '{self.alphabet}' > alphabet.txt",
             ]
         )
         self.prepare(filesystem_setup)
@@ -1130,8 +1148,9 @@ class TestSort(unittest.TestCase):
         self.assertListEqual(
             sort._read_file("unittests/test1.txt"),
             [
-                "abcdef had a dog, then they had a book \n",
-                " When it asdtnnasn it wanted to asjdiansdnainsd it siansdinanis\n",
+                "abcdef had a dog, then they had a book\n",
+                (' When it asdtnnasn it wanted to asjdiansdnainsd it '
+                 'siansdinanis\n'),
             ],
         )
 
@@ -1241,7 +1260,8 @@ class TestSort(unittest.TestCase):
         self.assertListEqual(
             self.out.pop().strip().split("\n"),
             [
-                "When it asdtnnasn it wanted to asjdiansdnainsd it siansdinanis",
+                ('When it asdtnnasn it wanted to asjdiansdnainsd it '
+                 'siansdinanis'),
                 "abcdef had a dog, then they had a book",
             ],
         )
