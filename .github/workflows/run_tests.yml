@@ -1,0 +1,25 @@
+name: Run shell tests CI
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build shell image
+      run: docker build -t shell .
+    - name: Run the unit tests
+      run: docker run --rm shell /comp0010/tools/unittest
+    - uses: actions/checkout@v2
+    - name: Build the system test image
+      run: docker build -t comp0010-system-test . 
+    - name: Run the system tests
+      run: python system_test/tests.py -v || exit 1
+
