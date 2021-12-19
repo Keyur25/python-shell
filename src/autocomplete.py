@@ -42,7 +42,8 @@ class Completer:  # Custom completer
         """
         if state == 0:  # on first trigger, build possible matches
             if text:  # cache matches (entries that start with entered text)
-                self.matches = [o for o in self.options if o and o.startswith(text)]
+                self.matches = [o for o in self.options
+                                if o and o.startswith(text)]
             else:  # no text entered, all matches possible
                 self.matches = self.options[:]
         # return match indexed by state
@@ -99,7 +100,8 @@ class Completer:  # Custom completer
         elif current_text[-1] == "-":  # It is a flag argument
             return self.autocomplete_flag(current_text, text, state)
         else:
-            return self.autocomplete_files_and_folders(current_text, text, state)
+            return self.autocomplete_files_and_folders(current_text,
+                                                       text, state)
 
 
 # Initialise the options to applications domain at first run.
