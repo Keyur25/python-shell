@@ -4,6 +4,7 @@ from parser import Parser
 from collections import deque
 from command_evaluator import extract_raw_commands
 from commands import Seq
+from autocomplete import autocomplete
 
 
 def eval(cmdline, out):
@@ -18,6 +19,7 @@ def eval(cmdline, out):
 
 
 if __name__ == "__main__":
+    autocomplete()
     args_num = len(sys.argv) - 1  # number of args excluding script name
     if args_num > 0:  # checks for correct args for non interactive mode
         if args_num != 2:

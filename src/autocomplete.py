@@ -105,7 +105,9 @@ class Completer:  # Custom completer
 
 
 # Initialise the options to applications domain at first run.
-completer = Completer(APPLICATIONS.keys())
-readline.set_completer(completer.check)
-readline.parse_and_bind("tab: complete")
-readline.redisplay()
+
+def autocomplete():
+    completer = Completer(APPLICATIONS.keys())
+    readline.set_completer(completer.check)
+    readline.parse_and_bind("tab: complete")
+    readline.redisplay()
