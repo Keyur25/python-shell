@@ -21,7 +21,7 @@ class TestCommands(unittest.TestCase):
         call.eval(self.out)
         self.assertEquals(
             self.out.pop(),
-            "Unrecognized Command: echo AAA >> file.txt"
+            "Unrecognized Command: echo AAA >> file.txt\n"
             )
 
     def test_empty_call(self):

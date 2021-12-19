@@ -16,7 +16,7 @@ class Call(Command):
     def _valid(self, out, call_tree):
         if not call_tree:
             if self.raw_command:
-                out.append(f"Unrecognized Command: {self.raw_command}")
+                out.append(f"Unrecognized Command: {self.raw_command}\n")
             return False
         return True
 
