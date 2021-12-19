@@ -23,7 +23,7 @@ if __name__ == "__main__":
         if args_num != 2:
             raise ValueError("wrong number of command line arguments")
         if sys.argv[1] != "-c":
-            # -c = runs the file in interactive mode
+            # -c runs the file in non-interactive mode
             raise ValueError(f"unexpected command line argument {sys.argv[1]}")
         out = deque()
         eval(sys.argv[2], out)

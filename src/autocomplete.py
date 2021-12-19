@@ -1,6 +1,7 @@
 """ OS Module used to get paths """
 from os import getcwd, listdir, path
 import readline
+
 APPLICATIONS = {
     "pwd": "",
     "cd": "",
@@ -19,10 +20,11 @@ APPLICATIONS = {
 }
 
 
-class Completer():  # Custom completer
+class Completer:  # Custom completer
     """
     Auto completer class
     """
+
     def __init__(self, options):
         self.options = sorted(options)  # List of items to check against
         self.matches = None  # List of matched strings (if duplicate)
@@ -40,8 +42,7 @@ class Completer():  # Custom completer
         """
         if state == 0:  # on first trigger, build possible matches
             if text:  # cache matches (entries that start with entered text)
-                self.matches = [o for o in self.options
-                                if o and o.startswith(text)]
+                self.matches = [o for o in self.options if o and o.startswith(text)]
             else:  # no text entered, all matches possible
                 self.matches = self.options[:]
         # return match indexed by state
@@ -74,13 +75,13 @@ class Completer():  # Custom completer
 
     def autocomplete_files_and_folders(self, current_text, text, state):
         ls_dir = getcwd()
-        if '/' in current_text[-1]:
-            ls_dir += "/" + current_text[-1][:current_text[-1].rindex('/')]
+        if "/" in current_text[-1]:
+            ls_dir += "/" + current_text[-1][: current_text[-1].rindex("/")]
         self.set_options_to_files_and_folders(ls_dir)
         res = self.completes(text, state)
         # If autocomplete text is path add a '/' to distinguish
-        if res is not None and path.isdir(ls_dir + '/' + res + '/'):
-            return res + '/'
+        if res is not None and path.isdir(ls_dir + "/" + res + "/"):
+            return res + "/"
         return res
 
     def check(self, text, state, current=None):
@@ -93,18 +94,16 @@ class Completer():  # Custom completer
         if current is None:
             current = readline.get_line_buffer()
         current_text = current.split(" ")
-        if len(current_text) == 1 or current_text[-2] in ['|', ';', '`']:
+        if len(current_text) == 1 or current_text[-2] in ["|", ";", "`"]:
             return self.autocomplete_application(text, state)
-        elif current_text[-1] == '-':  # It is a flag argument
+        elif current_text[-1] == "-":  # It is a flag argument
             return self.autocomplete_flag(current_text, text, state)
         else:
-            return self.autocomplete_files_and_folders(
-                current_text, text, state
-                )
+            return self.autocomplete_files_and_folders(current_text, text, state)
 
 
 # Initialise the options to applications domain at first run.
 completer = Completer(APPLICATIONS.keys())
 readline.set_completer(completer.check)
-readline.parse_and_bind('tab: complete')
+readline.parse_and_bind("tab: complete")
 readline.redisplay()
