@@ -14,6 +14,7 @@ RUN chmod u+x /comp0010/sh
 RUN chmod u+x /comp0010/tools/test
 RUN chmod u+x /comp0010/tools/coverage
 RUN chmod u+x /comp0010/tools/analysis
+RUN chmod u+x /comp0010/tools/unittest
 
 RUN cd /comp0010 && python -m pip install -r requirements.txt
 
