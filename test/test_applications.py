@@ -1337,3 +1337,31 @@ class TestFileOutput(unittest.TestCase):
         if p.returncode != 0:
             print("error: failed to remove unittests directory")
             exit(1)
+
+
+class TestClear(unittest.TestCase):
+    def test_clear_in_pipe(self):
+        clear = app.Clear()
+        args = []
+        out = deque()
+        self.assertRaises(
+            app.ApplicationExcecutionError,
+            clear.exec,
+            args,
+            out,
+            True
+            )
+
+
+class TestExit(unittest.TestCase):
+    def test_exit_in_pipe(self):
+        exit = app.Exit()
+        args = []
+        out = deque()
+        self.assertRaises(
+            app.ApplicationExcecutionError,
+            exit.exec,
+            args,
+            out,
+            True
+            )
