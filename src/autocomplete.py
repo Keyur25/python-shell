@@ -23,7 +23,8 @@ APPLICATIONS = {
 class Completer:  # Custom completer
     """
     Auto completer class
-    USAGE: <TAB> to get autocompletion
+    USAGE: <TAB> to get autocompletion of applications, flags
+    and directories/files in interactive mode.
 
     See https://bit.ly/3yKr0JV (GitHub PR) for usage and details.
     """
