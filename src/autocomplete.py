@@ -23,6 +23,9 @@ APPLICATIONS = {
 class Completer:  # Custom completer
     """
     Auto completer class
+    USAGE: <TAB> to get autocompletion
+
+    See https://bit.ly/3yKr0JV (GitHub PR) for usage and details.
     """
 
     def __init__(self, options):
@@ -64,10 +67,12 @@ class Completer:  # Custom completer
         self.set_options(opts)
 
     def autocomplete_application(self, text, state):
+        """ Returns list of matches by application """
         self.options = APPLICATIONS.keys()
         return self.completes(text, state)
 
     def autocomplete_flag(self, current_text, text, state):
+        """ Returns list of matches by flag """
         params = APPLICATIONS.get(current_text[-2])
         self.options = [params]
         res = self.completes(text, state)
@@ -75,6 +80,7 @@ class Completer:  # Custom completer
             return res[1:]
 
     def autocomplete_files_and_folders(self, current_text, text, state):
+        """ Returns list of matches by file and folders """
         ls_dir = getcwd()
         if "/" in current_text[-1]:
             ls_dir += "/" + current_text[-1][: current_text[-1].rindex("/")]
@@ -104,9 +110,8 @@ class Completer:  # Custom completer
                                                        text, state)
 
 
-# Initialise the options to applications domain at first run.
-
 def autocomplete():
+    """ Initialise completer and set options to applications at first run. """
     completer = Completer(APPLICATIONS.keys())
     readline.set_completer(completer.check)
     readline.parse_and_bind("tab: complete")
