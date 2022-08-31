@@ -8,7 +8,6 @@ This is a program that emulates a subset of the functionality present in a Linux
 
 - [Language](doc/language.md)
 - [Applications](doc/applications.md)
-- [Command Line Interface](doc/interface.md)
 
 ## License
 
